@@ -181,8 +181,20 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
 
                 // ---------------
                 // generate test case source code string
-                String encoding = UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
-                        .getInputStreamFrom(targetClassFile));
+                
+                // fk
+				String encoding;
+				if (targetClassFile.isAccessible()) {
+					encoding = targetClassFile.getCharset();
+				} else {
+					encoding = UniversalDetectorUtil
+							.getDetectedEncoding(EclipseIFileUtil
+									.getInputStreamFrom(targetClassFile));
+				}
+				// String encoding =
+				// UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
+				// .getInputStreamFrom(targetClassFile));
+				// fk
                 InputStream targetInputStream = EclipseIFileUtil.getInputStreamFrom(targetClassFile);
                 String sourceCodeString = IOUtil.readAsString(targetInputStream, encoding);
                 LineBreakProvider lineBreakProvider = new LineBreakProvider(config, null);
