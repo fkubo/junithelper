@@ -1,11 +1,6 @@
-.metadata
-.settings
-.classpath
-.project
 *.iml
 *.ipr
 *.iws
-*.log
 bin/
 dist/
 lib_managed/
@@ -13,4 +8,3 @@ project/boot/
 project/plugins/project/
 target/
 *.swp
-
