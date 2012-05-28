@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JUnit Helper Eclipse Plugin
 Bundle-SymbolicName: org.junithelper.plugin;singleton:=true
-Bundle-Version: 1.11.5
+Bundle-Version: 1.11.5.vqualifier
 Bundle-ClassPath: .,
  lib/commons-io-2.0.jar,
  lib/juniversalchardet-1.0.3.jar,
