@@ -6,7 +6,7 @@ Bundle-Version: 1.11.5.vqualifier
 Bundle-ClassPath: .,
  lib/commons-io-2.0.jar,
  lib/juniversalchardet-1.0.3.jar,
- lib/junithelper-core-1.13.jar
+ lib/junithelper-core-1.14.jar
 Bundle-Activator: org.junithelper.plugin.Activator
 Bundle-Vendor: junithelper.org
 Require-Bundle: org.eclipse.ui,

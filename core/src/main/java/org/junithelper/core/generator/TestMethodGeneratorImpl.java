@@ -416,7 +416,12 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				}
 
 				appender.appendTabs(buf, 2);
-				if (config.mockObjectFramework == MockObjectFramework.JMock2) {
+				// fk
+				if (config.mockObjectFramework == MockObjectFramework.JMock2
+						|| config.mockObjectFramework == MockObjectFramework.JMockit) {
+					// if (config.mockObjectFramework ==
+					// MockObjectFramework.JMock2) {
+					// fk
 					buf.append("final ");
 				}
 				buf.append(typeName);
