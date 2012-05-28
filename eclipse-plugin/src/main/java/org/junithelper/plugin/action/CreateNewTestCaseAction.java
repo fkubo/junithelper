@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -196,7 +197,10 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
 				// .getInputStreamFrom(targetClassFile));
 				// fk
                 InputStream targetInputStream = EclipseIFileUtil.getInputStreamFrom(targetClassFile);
-                String sourceCodeString = IOUtil.readAsString(targetInputStream, encoding);
+				// String sourceCodeString =
+				// IOUtil.readAsString(targetInputStream, encoding);
+				String sourceCodeString = IOUtils.toString(targetInputStream,
+						encoding);
                 LineBreakProvider lineBreakProvider = new LineBreakProvider(config, null);
                 TestCaseGenerator generator = TestCaseGeneratorFactory.create(config, lineBreakProvider);
                 generator.initialize(new ClassMetaExtractor(config).extract(sourceCodeString));
