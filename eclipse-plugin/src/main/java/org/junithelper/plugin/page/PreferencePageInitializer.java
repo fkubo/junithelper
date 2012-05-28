@@ -29,7 +29,7 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
         // Language
-        store.setDefault(Preference.lang, Preference.Lang.English);
+		store.setDefault(Preference.lang, Preference.Lang.Japanese);
 
         store.setDefault(Preference.Common.outputFileEncoding, new Configuration().outputFileEncoding);
 
@@ -51,7 +51,7 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.TestMethodGen.includePublic, true);
         store.setDefault(Preference.TestMethodGen.includeProtected, true);
         store.setDefault(Preference.TestMethodGen.includePackageLocal, true);
-        store.setDefault(Preference.TestMethodGen.excludesAccessors, true);
+		store.setDefault(Preference.TestMethodGen.excludesAccessors, false);
 
 		store.setDefault(Preference.TestMethodGen.delimiter, "");
 
@@ -70,7 +70,8 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.TestMethodGen.enabledTestMethodSampleImpl, true);
 		store.setDefault(Preference.TestMethodGen.usingMock,
 				Preference.TestMethodGen.usingMockJMockit);
-        store.setDefault(Preference.TestMethodGen.usingTestingPatternComments, Preference.TestMethodGen.commentsNone);
+		store.setDefault(Preference.TestMethodGen.usingTestingPatternComments,
+				Preference.TestMethodGen.commentsArrangeActAssert);
 
     }
 
