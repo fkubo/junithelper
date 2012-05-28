@@ -2,7 +2,7 @@
 <feature
       id="org.junithelper.plugin"
       label="JUnit Helper Eclipse Plugin"
-      version="1.11.3"
+      version="1.11.4"
       provider-name="junithelper.org"
       plugin="org.junithelper.plugin"
       image="icon/junithelper.png"

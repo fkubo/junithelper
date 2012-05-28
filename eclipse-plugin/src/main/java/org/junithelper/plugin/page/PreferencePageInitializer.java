@@ -43,7 +43,8 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.Common.softTabSize, 4);
 
         // generating extended test class
-        store.setDefault(Preference.TestClassGen.junitVersion, Preference.TestClassGen.junitVersion3);
+		store.setDefault(Preference.TestClassGen.junitVersion,
+				Preference.TestClassGen.junitVersion4);
         store.setDefault(Preference.TestClassGen.classToExtend, "junit.framework.TestCase");
 
         // generating test methods
@@ -52,22 +53,23 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.TestMethodGen.includePackageLocal, true);
         store.setDefault(Preference.TestMethodGen.excludesAccessors, true);
 
-        store.setDefault(Preference.TestMethodGen.delimiter, "_");
+		store.setDefault(Preference.TestMethodGen.delimiter, "");
 
         store.setDefault(Preference.TestMethodGen.enabledArgs, true);
-        store.setDefault(Preference.TestMethodGen.argsPrefix, "A");
-        store.setDefault(Preference.TestMethodGen.argsDelimiter, "$");
+		store.setDefault(Preference.TestMethodGen.argsPrefix, "");
+		store.setDefault(Preference.TestMethodGen.argsDelimiter, "");
 
         store.setDefault(Preference.TestMethodGen.enabledReturn, false);
         store.setDefault(Preference.TestMethodGen.returnPrefix, "R");
         store.setDefault(Preference.TestMethodGen.returnDelimiter, "$");
 
-        store.setDefault(Preference.TestMethodGen.enabledException, true);
+		store.setDefault(Preference.TestMethodGen.enabledException, false);
         store.setDefault(Preference.TestMethodGen.exceptionPrefix, "T");
         store.setDefault(Preference.TestMethodGen.exceptionDelimiter, "$");
 
         store.setDefault(Preference.TestMethodGen.enabledTestMethodSampleImpl, true);
-        store.setDefault(Preference.TestMethodGen.usingMock, Preference.TestMethodGen.usingMockNone);
+		store.setDefault(Preference.TestMethodGen.usingMock,
+				Preference.TestMethodGen.usingMockJMockit);
         store.setDefault(Preference.TestMethodGen.usingTestingPatternComments, Preference.TestMethodGen.commentsNone);
 
     }
