@@ -68,22 +68,22 @@
 		<key
 			commandId="org.junithelper.plugin.action.Force3TestCaseActionCommand"
 			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-			sequence="M1+M3+3">
+			sequence="M3+3">
 		</key>
 		<key
 			commandId="org.junithelper.plugin.action.Force4TestCaseActionCommand"
 			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-			sequence="M1+M3+4">
+			sequence="M3+4">
 		</key>
 		<key
 			commandId="org.junithelper.plugin.action.OpenTestTargetActionCommand"
 			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-			sequence="M1+M3+8">
+			sequence="M3+8">
 		</key>
 		<key
 			commandId="org.junithelper.plugin.action.OpenTestCaseActionCommand"
 			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-			sequence="M1+M3+9">
+			sequence="M3+9">
 		</key>
 	</extension>
 
@@ -100,25 +100,25 @@
 			path="additions">
 		</menu>
 		<action
-			label="Force JUnit 3.x Style Alt+Ctrl+3"
+			label="Force JUnit 3.x Style Alt+3"
 			class="org.junithelper.plugin.action.Force3TestCaseAction"
 			id="org.junithelper.plugin.action.Force3TestCaseAction.pe"
 			menubarPath="org.junithelper.plugin.popupmenu.pe/additions" >
 		</action>
 		<action
-			label="Force JUnit 4.x Style Alt+Ctrl+4"
+			label="Force JUnit 4.x Style Alt+4"
 			class="org.junithelper.plugin.action.Force4TestCaseAction"
 			id="org.junithelper.plugin.action.Force4TestCaseAction.pe"
 			menubarPath="org.junithelper.plugin.popupmenu.pe/additions" >
 		</action>
 		<action
-			label="Open Test Target Alt+Ctrl+8"
+			label="Open Test Target Alt+8"
 			class="org.junithelper.plugin.action.OpenTestTargetAction"
 			id="org.junithelper.plugin.action.OpenTestTargetAction.pe"
 			menubarPath="org.junithelper.plugin.popupmenu.pe/additions">
 		</action>
 		<action
-			label="Open Test Class Alt+Ctrl+9"
+			label="Open Test Class Alt+9"
 			class="org.junithelper.plugin.action.OpenTestCaseAction"
 			id="org.junithelper.plugin.action.OpenTestCaseAction.pe"
 			menubarPath="org.junithelper.plugin.popupmenu.pe/additions" >
@@ -136,25 +136,25 @@
 			path="additions">
 		</menu>
 		<action
-			label="Force JUnit 3.x Style Alt+Ctrl+3"
+			label="Force JUnit 3.x Style Alt+3"
 			class="org.junithelper.plugin.action.Force3TestCaseAction"
 			id="org.junithelper.plugin.action.Force3TestCaseAction.nv"
 			menubarPath="org.junithelper.plugin.popupmenu.nv/additions" >
 		</action>
 		<action
-			label="Force JUnit 4.x Style Alt+Ctrl+4"
+			label="Force JUnit 4.x Style Alt+4"
 			class="org.junithelper.plugin.action.Force4TestCaseAction"
 			id="org.junithelper.plugin.action.Force4TestCaseAction.nv"
 			menubarPath="org.junithelper.plugin.popupmenu.nv/additions" >
 		</action>
 		<action
-			label="Open Test Target Alt+Ctrl+8"
+			label="Open Test Target Alt+8"
 			class="org.junithelper.plugin.action.OpenTestTargetAction"
 			id="org.junithelper.plugin.action.OpenTestTargetAction.nv"
 			menubarPath="org.junithelper.plugin.popupmenu.nv/additions">
 		</action>
 		<action
-			label="Open Test Class Alt+Ctrl+9"
+			label="Open Test Class Alt+9"
 			class="org.junithelper.plugin.action.OpenTestCaseAction"
 			id="org.junithelper.plugin.action.OpenTestCaseAction.nv"
 			menubarPath="org.junithelper.plugin.popupmenu.nv/additions" >
@@ -171,25 +171,25 @@
 			path="additions">
 		</menu>
 		<action
-			label="Force JUnit 3 Style Alt+Ctrl+3"
+			label="Force JUnit 3 Style Alt+3"
 			class="org.junithelper.plugin.action.Force3TestCaseAction"
 			id="org.junithelper.plugin.action.Force3TestCaseAction.je"
 			menubarPath="org.junithelper.plugin.popupmenu.je/additions" >
 		</action>
 		<action
-			label="Force JUnit 4.x Style Alt+Ctrl+4"
+			label="Force JUnit 4.x Style Alt+4"
 			class="org.junithelper.plugin.action.Force4TestCaseAction"
 			id="org.junithelper.plugin.action.Force4TestCaseAction.je"
 			menubarPath="org.junithelper.plugin.popupmenu.je/additions" >
 		</action>
 		<action
-			label="Open Test Target Alt+Ctrl+8"
+			label="Open Test Target Alt+8"
 			class="org.junithelper.plugin.action.OpenTestTargetAction"
 			id="org.junithelper.plugin.action.OpenTestTargetAction.je"
 			menubarPath="org.junithelper.plugin.popupmenu.je/additions" >
 		</action>
 		<action
-			label="Open Test Class Alt+Ctrl+9"
+			label="Open Test Class Alt+9"
 			class="org.junithelper.plugin.action.OpenTestCaseAction"
 			id="org.junithelper.plugin.action.OpenTestCaseAction.je"
 			menubarPath="org.junithelper.plugin.popupmenu.je/additions" >
