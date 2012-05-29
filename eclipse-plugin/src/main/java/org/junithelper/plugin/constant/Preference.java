@@ -75,7 +75,7 @@ public class Preference {
         public static final String classToExtend = "Preference.TestClassGen.classToExtend";
 
 		// fk コメント定義追加.
-		public static final String commentAuthor = "Preference.TestMethodGen.commentAuthor";
+		public static final String commentAuthor = "Preference.TestClassGen.commentAuthor";
 
 		// fk
 

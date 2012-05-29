@@ -128,7 +128,8 @@ public class PreferenceLoader {
             config.testingPatternExplicitComment = TestingPatternExplicitComment.GivenWhenThen;
         }
 		// fk コメント定義追加.
-		TemplateStore templates = JavaPlugin.getDefault().getTemplateStore();
+		TemplateStore templates = JavaPlugin.getDefault()
+				.getCodeTemplateStore();
 		if (templates.findTemplate("filecomment") != null) {
 			config.copyright = templates.findTemplate("filecomment")
 					.getPattern();
