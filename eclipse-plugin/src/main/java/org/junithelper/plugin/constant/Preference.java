@@ -74,6 +74,11 @@ public class Preference {
 
         public static final String classToExtend = "Preference.TestClassGen.classToExtend";
 
+		// fk コメント定義追加.
+		public static final String commentAuthor = "Preference.TestMethodGen.commentAuthor";
+
+		// fk
+
     }
 
     public static class TestMethodGen {
@@ -131,7 +136,6 @@ public class Preference {
         public static final String commentsArrangeActAssert = "Preference.TestMethodGen.commentsArrangeActAssert";
 
         public static final String commentsGivenWhenThen = "Preference.TestMethodGen.commentsGivenWhenThen";
-
     }
 
 }

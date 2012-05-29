@@ -487,7 +487,8 @@ public class TestMethodGeneratorImplTest {
 		MethodMeta targetMethodMeta = targetClassMeta.methods.get(0);
 		TestMethodMeta testMethodMeta = generator.getTestMethodMeta(targetMethodMeta);
 		// when
-		List<String> actual = generator.getMockedFieldsForJMockit(testMethodMeta);
+		List<String[]> actual = generator
+				.getMockedFieldsForJMockit(testMethodMeta);
 		// then
 		// e.g. : verify(mocked).called();
 		assertEquals(1, actual.size());

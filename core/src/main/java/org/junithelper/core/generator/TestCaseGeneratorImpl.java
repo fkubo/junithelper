@@ -114,7 +114,7 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 			addTestMethodMetaToListIfNotExists(dest, meta);
 		}
 		// is testing instantiation required
-		// fk
+		// fk abstractクラスもinstantiationのテストを行わない.
 		// if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() >
 		// 0) {
 		if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() > 0
@@ -275,6 +275,14 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 	@Override
 	public String getNewTestCaseSourceCode() {
 		StringBuilder buf = new StringBuilder();
+
+		// fk Copyright追加.
+		if (config.copyright != null && config.copyright.trim().length() > 0) {
+			buf.append(config.copyright);
+			appender.appendLineBreak(buf);
+		}
+		// fk
+
 		if (targetClassMeta.packageName != null && targetClassMeta.packageName.trim().length() > 0) {
 			buf.append("package ");
 			buf.append(targetClassMeta.packageName);
@@ -303,6 +311,27 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 		} else {
 			appender.appendLineBreak(buf);
 		}
+
+		// fk クラス用JavaDoc追加.
+		buf.append("/**");
+		appender.appendLineBreak(buf);
+		buf.append(" * <H3>");
+		appender.appendLineBreak(buf);
+		buf.append(" * ");
+		buf.append(targetClassMeta.name);
+		buf.append("のテストクラス.</H3>");
+		appender.appendLineBreak(buf);
+		buf.append(" * ");
+		appender.appendLineBreak(buf);
+		if (config.author != null && config.author.trim().length() > 0) {
+			buf.append(" * @author ");
+			buf.append(config.author);
+			appender.appendLineBreak(buf);
+		}
+		buf.append(" */");
+		appender.appendLineBreak(buf);
+		// fk
+
 		buf.append("public class ");
 		buf.append(targetClassMeta.name);
 		buf.append("Test ");

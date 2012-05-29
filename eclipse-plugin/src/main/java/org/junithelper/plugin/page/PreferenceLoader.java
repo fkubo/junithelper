@@ -15,7 +15,9 @@
  */
 package org.junithelper.plugin.page;
 
+import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.junithelper.core.config.Configuration;
 import org.junithelper.core.config.JUnitVersion;
 import org.junithelper.core.config.LineBreakPolicy;
@@ -69,6 +71,10 @@ public class PreferenceLoader {
 
     public String classToExtend;
 
+	// fk コメント定義追加.
+	public String author;
+	// fk
+
     private Configuration config = new Configuration();
 
     public Configuration getConfig() {
@@ -121,6 +127,14 @@ public class PreferenceLoader {
         if (isGivenWhenThenCommentsRequired) {
             config.testingPatternExplicitComment = TestingPatternExplicitComment.GivenWhenThen;
         }
+		// fk コメント定義追加.
+		TemplateStore templates = JavaPlugin.getDefault().getTemplateStore();
+		if (templates.findTemplate("filecomment") != null) {
+			config.copyright = templates.findTemplate("filecomment")
+					.getPattern();
+		}
+		config.author = author;
+		// fk
         return config;
     }
 
@@ -186,6 +200,9 @@ public class PreferenceLoader {
         // class to extend
         classToExtend = store.getString(Preference.TestClassGen.classToExtend);
 
+		// fk コメント定義追加
+		author = store.getString(Preference.TestClassGen.commentAuthor);
+		// fk
     }
 
     static final boolean isUsingEasyMock(IPreferenceStore store) {

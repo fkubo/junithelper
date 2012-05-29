@@ -42,7 +42,7 @@ public final class EclipseIFileUtil {
 
 	public static String getDetectedEncodingFrom(IFile file, String defaultEncoding) {
 
-		// fk
+		// fk 文字コード指定変更.
 		if (file.isAccessible()) {
 			try {
 				return file.getCharset();

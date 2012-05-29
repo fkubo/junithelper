@@ -139,13 +139,30 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 
 		// JMockit
 		if (config.mockObjectFramework == MockObjectFramework.JMockit) {
-			List<String> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
-			for (String mocked : mockedFieldsForJMockit) {
+			// fk Mock用のJavaDoc用のコメントを追加.
+			List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
+			// List<String> mockedFieldsForJMockit =
+			// getMockedFieldsForJMockit(testMethodMeta);
+			for (String[] mocked : mockedFieldsForJMockit) {
+				// for (String mocked : mockedFieldsForJMockit) {
+				assert (mocked.length == 3);
+				// fk
+
+				// fk Mock用JavaDoc作成.
+				appender.appendTabs(buf, 1);
+				buf.append("/** ");
+				buf.append(mocked[1]);
+				buf.append("で利用している引数");
+				buf.append(mocked[2]);
+				buf.append("のMock. */");
+				appender.appendLineBreak(buf);
+				// fk
+
 				appender.appendTabs(buf, 1);
 				buf.append("@Mocked ");
 				appender.appendLineBreak(buf);
 				appender.appendTabs(buf, 1);
-				buf.append(mocked);
+				buf.append(mocked[0]);
 				buf.append(StringValue.Semicolon);
 				appender.appendLineBreak(buf);
 			}
@@ -153,6 +170,22 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				appender.appendLineBreak(buf);
 			}
 		}
+
+		// fk テストメソッド用JavaDoc作成.
+		appender.appendTabs(buf, 1);
+		buf.append("/**");
+		appender.appendLineBreak(buf);
+		appender.appendTabs(buf, 1);
+		buf.append(" * ");
+		// buf.append(testMethodMeta.classMeta.name+"."+testMethodMeta.methodMeta.name);
+		buf.append(getTestMethodNamePrefix(testMethodMeta,
+				testMethodMeta.testingTargetException));
+		buf.append("をテストする.");
+		appender.appendLineBreak(buf);
+		appender.appendTabs(buf, 1);
+		buf.append(" */");
+		appender.appendLineBreak(buf);
+		// fk
 
 		// test method signature
 		if (config.junitVersion == JUnitVersion.version3) {
@@ -168,17 +201,23 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 			buf.append("public void ");
 		}
 		buf.append(getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException));
-		boolean isThrowableRequired = false;
-		if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.throwsExceptions != null) {
-			for (ExceptionMeta ex : testMethodMeta.methodMeta.throwsExceptions) {
-				if (ex.name.equals("Throwable")) {
-					isThrowableRequired = true;
-					break;
-				}
-			}
-		}
-		buf.append("() throws ");
-		buf.append(isThrowableRequired ? "Throwable" : "Exception");
+
+		// fk テストメソッドの例外を廃止.
+		// boolean isThrowableRequired = false;
+		// if (testMethodMeta.methodMeta != null &&
+		// testMethodMeta.methodMeta.throwsExceptions != null) {
+		// for (ExceptionMeta ex : testMethodMeta.methodMeta.throwsExceptions) {
+		// if (ex.name.equals("Throwable")) {
+		// isThrowableRequired = true;
+		// break;
+		// }
+		// }
+		// }
+		buf.append("()");
+		// buf.append("() throws ");
+		// buf.append(isThrowableRequired ? "Throwable" : "Exception");
+		// fk
+
 		buf.append(" {");
 		appender.appendLineBreak(buf);
 
@@ -258,7 +297,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				appendPreparingArgs(buf, testMethodMeta);
 				// mock/stub checking
 
-				// fk
+				// fk アクセサも除外するために引数追加.
 				appendMockChecking(buf, 2, testMethodMeta);
 				// appendMockChecking(buf, 2);
 				// fk
@@ -325,7 +364,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				appendPreparingArgs(buf, testMethodMeta);
 				// mock/stub checking
 
-				// fk
+				// fk アクセサも除外するために引数追加.
 				appendMockChecking(buf, 2, testMethodMeta);
 				// appendMockChecking(buf, 2);
 				// fk
@@ -416,7 +455,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				}
 
 				appender.appendTabs(buf, 2);
-				// fk
+				// fk JMockitでも引数をfinalになるよう変更.
 				if (config.mockObjectFramework == MockObjectFramework.JMock2
 						|| config.mockObjectFramework == MockObjectFramework.JMockit) {
 					// if (config.mockObjectFramework ==
@@ -461,12 +500,12 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 		}
 	}
 
-	// fk
+	// fk アクセサも除外するために引数追加.
 	void appendMockChecking(StringBuilder buf, int depth, TestMethodMeta testMethodMeta) {
 		// void appendMockChecking(StringBuilder buf, int depth) {
+		// fk
 
-		//fk
-		// isAccessor の時も出力しない
+		// fk isAccessor の時も出力しない
 		if (testMethodMeta.methodMeta.isAccessor) {
 			return;
 		}
@@ -585,8 +624,10 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 		}
 	}
 
-	List<String> getMockedFieldsForJMockit(TestMethodMeta testMethodMeta) {
-		List<String> dest = new ArrayList<String>();
+	// fk Mock用のJavaDoc用のコメントを追加.
+	List<String[]> getMockedFieldsForJMockit(TestMethodMeta testMethodMeta) {
+		List<String[]> dest = new ArrayList<String[]>();
+		// fk
 		if (testMethodMeta.methodMeta != null) {
 			int len = testMethodMeta.methodMeta.argTypes.size();
 			for (int i = 0; i < len; i++) {
@@ -600,10 +641,24 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 				ArgTypeMeta argTypeMeta = testMethodMeta.methodMeta.argTypes.get(i);
 				String argName = testMethodMeta.methodMeta.argNames.get(i);
 				String value = getArgValue(testMethodMeta, argTypeMeta, argName);
-				if (value.equals("this."
-						+ getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException) + "_"
-						+ argName)) {
-					dest.add(argTypeMeta.name + " " + value.replace("this.", ""));
+				// fk Mockの変数名をカスタマイズ.
+				if (value.equals(getJMockitName(testMethodMeta,
+						testMethodMeta.testingTargetException, argName))) {
+					// if (value.equals("this."
+					// + getTestMethodNamePrefix(testMethodMeta,
+					// testMethodMeta.testingTargetException) + "_"
+					// + argName)) {
+					// fk
+
+					// fk Mock用のJavaDoc用のコメントを追加.
+					dest.add(new String[] {
+							argTypeMeta.name + " " + value.replace("this.", ""),
+							getTestMethodNamePrefix(testMethodMeta,
+									testMethodMeta.testingTargetException),
+									argName, });
+					// dest.add(argTypeMeta.name + " " + value.replace("this.",
+					// ""));
+					// fk
 				}
 			}
 		}
@@ -654,8 +709,13 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 			return "context.mock(" + argTypeMeta.name.replaceAll(RegExp.Generics, StringValue.Empty) + ".class)";
 		} else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
 			if (new AvailableTypeDetector(targetClassMeta).isJMockitMockableType(argTypeMeta.name)) {
-				return "this." + getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException) + "_"
-						+ argName;
+				// fk Mockの変数名をカスタマイズ.
+				return getJMockitName(testMethodMeta,
+						testMethodMeta.testingTargetException, argName);
+				// return "this." + getTestMethodNamePrefix(testMethodMeta,
+				// testMethodMeta.testingTargetException) + "_"
+				// + argName;
+				// fk
 			} else {
 				return "null";
 			}
@@ -666,4 +726,24 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 		}
 	}
 
+	// fk Mockの変数名をカスタマイズ.
+	private String getJMockitName(TestMethodMeta testMethodMeta,
+			ExceptionMeta exceptionMeta, String argName) {
+
+		assert (argName != null && argName.length() > 0);
+
+		// 元の実装を変更し、_区切りではなくて、大文字でつなぐ.
+		StringBuilder sb = new StringBuilder();
+		sb.append("this.");
+		sb.append(getTestMethodNamePrefix(testMethodMeta,
+				testMethodMeta.testingTargetException));
+		sb.append(argName.substring(0, 1).toUpperCase());
+		if (argName.length() > 1) {
+			sb.append(argName.substring(1));
+		}
+		return sb.toString();
+		//return "this." + getTestMethodNamePrefix(testMethodMeta, exceptionMeta)
+		//		+ "_" + argName;
+	}
 }
+// fk

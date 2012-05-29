@@ -183,7 +183,7 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
                 // ---------------
                 // generate test case source code string
                 
-                // fk
+				// fk 文字コード指定変更.
 				String encoding;
 				if (targetClassFile.isAccessible()) {
 					encoding = targetClassFile.getCharset();

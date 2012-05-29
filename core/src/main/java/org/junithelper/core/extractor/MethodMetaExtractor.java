@@ -195,7 +195,7 @@ public class MethodMetaExtractor {
 		String regExpForFieldTypeArea = fieldType.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(",",
 				"\\\\s*,\\\\s*");
 
-		// fk
+		// fk protectedメソッドもアクセサの対象とする.
 		String regExpForPrivateFieldThatHasAccessors = ".*?pr((ivate)|(otected))\\s+"
 				+ regExpForFieldTypeArea
 				+ "("

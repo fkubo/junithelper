@@ -66,6 +66,12 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
 
     RadioGroupFieldEditor editor_TestingPatternComments;
 
+	// fk コメントフィールド追加.
+	StringFieldEditor editor_Copywrite;
+	StringFieldEditor editor_Author;
+
+	// fk
+
     public PreferencePage() {
         super(FieldEditorPreferencePage.GRID);
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
@@ -237,6 +243,14 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                                 commentsLabelAndValues, parent);
                         addField(editor_TestingPatternComments);
                     }
+
+					// fk コメントフィールド追加.
+					editor_Author = new StringFieldEditor(
+							Preference.TestClassGen.commentAuthor,
+							props.get(Preference.TestClassGen.commentAuthor),
+							parent);
+					addField(editor_Author);
+					// fk
 
                 }
             }
