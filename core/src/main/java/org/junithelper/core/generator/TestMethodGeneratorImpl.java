@@ -222,7 +222,8 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 		appender.appendLineBreak(buf);
 
 		// fk アクセサにTODOメッセージを入れないよう修正.
-		if (!testMethodMeta.methodMeta.isAccessor) {
+		if (testMethodMeta.methodMeta == null
+				|| !testMethodMeta.methodMeta.isAccessor) {
 			// auto generated todo message
 			appender.appendTabs(buf, 2);
 			buf.append("// ");
