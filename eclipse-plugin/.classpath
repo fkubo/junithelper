@@ -6,7 +6,7 @@
 	<classpathentry exported="true" kind="lib" path="lib/junithelper-core-1.16.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/juniversalchardet-1.0.3.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-full/2.0/cglib-full-2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar" sourcepath="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3-sources.jar"/>
