@@ -73,7 +73,7 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(Preference.TestMethodGen.usingTestingPatternComments,
 				Preference.TestMethodGen.commentsArrangeActAssert);
 
-		// fk コメント定義追加.
+		// fk 2012.05.29 コメント定義追加.
 		store.setDefault(Preference.TestClassGen.commentAuthor,
 				System.getProperty("user.name"));
 		// fk

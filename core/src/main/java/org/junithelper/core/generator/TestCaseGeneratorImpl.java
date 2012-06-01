@@ -114,7 +114,7 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 			addTestMethodMetaToListIfNotExists(dest, meta);
 		}
 		// is testing instantiation required
-		// fk abstractクラスもinstantiationのテストを行わない.
+		// fk 2012.05.25 abstractクラスもinstantiationのテストを行わない.
 		// if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() >
 		// 0) {
 		if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() > 0
@@ -276,7 +276,7 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 	public String getNewTestCaseSourceCode() {
 		StringBuilder buf = new StringBuilder();
 
-		// fk Copyright追加.
+		// fk 2012.05.29 Copyright追加.
 		if (config.copyright != null && config.copyright.trim().length() > 0) {
 			buf.append(config.copyright);
 			appender.appendLineBreak(buf);
@@ -312,7 +312,7 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 			appender.appendLineBreak(buf);
 		}
 
-		// fk クラス用JavaDoc追加.
+		// fk 2012.05.29 クラス用JavaDoc追加.
 		buf.append("/**");
 		appender.appendLineBreak(buf);
 		buf.append(" * <H3>");

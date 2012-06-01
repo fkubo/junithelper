@@ -144,23 +144,36 @@ public class MethodMetaExtractor {
 			// is accessor method or not
 			String fieldName = null;
 			String fieldType = null;
-			if (meta.name.matches("^set.+")) {
+			// fk 2012.06.01 遅いのでmatchesをやめる.あと、is判定用の変数追加.
+			String isFieldName = null;
+			if (meta.name.startsWith("set")) {
+			//if (meta.name.matches("^set.+")) {
 				// target field name
 				fieldName = meta.name.substring(3);
 				if (meta.argTypes.size() > 0) {
 					fieldType = meta.argTypes.get(0).name;
 				}
-			} else if (meta.name.matches("^get.+")) {
+				isFieldName = "is" + fieldName;
+			} else if (meta.name.startsWith("get")) {
+				//} else if (meta.name.matches("^get.+")) {
 				// target field name
 				fieldName = meta.name.substring(3);
 				fieldType = meta.returnType.name;
-			} else if (meta.name.matches("^is.+")) {
+			} else if (meta.name.startsWith("is")) {
+			//} else if (meta.name.matches("^is.+")) {
 				// target field name
 				fieldName = meta.name.substring(2);
 				fieldType = meta.returnType.name;
+				isFieldName = meta.name;
 			}
+			// fk
 			if (fieldName != null && fieldType != null) {
 				meta.isAccessor = isPrivateFieldExists(fieldType, fieldName, sourceCodeString);
+				// fk 2012.06.01 isの場合はis付きでもチェックする.
+				if (!meta.isAccessor && isFieldName != null) {
+					meta.isAccessor = isPrivateFieldExists(fieldType, isFieldName, sourceCodeString);
+				}
+				// fk
 			}
 			// -----------------
 			// throws exception
@@ -195,7 +208,7 @@ public class MethodMetaExtractor {
 		String regExpForFieldTypeArea = fieldType.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(",",
 				"\\\\s*,\\\\s*");
 
-		// fk protectedメソッドもアクセサの対象とする.
+		// fk 2012.05.28 protectedメソッドもアクセサの対象とする.
 		String regExpForPrivateFieldThatHasAccessors = ".*?pr((ivate)|(otected))\\s+"
 				+ regExpForFieldTypeArea
 				+ "("
@@ -205,9 +218,9 @@ public class MethodMetaExtractor {
 		// + RegExp.Generics + ")*" +
 		// RegExp.WhiteSpace.Consecutive_OneOrMore_Max + regExpForFieldNameArea
 		// + ".+";
-		// fk
 		return sourceCodeString.replaceAll(RegExp.CRLF, StringValue.Empty).matches(
 				regExpForPrivateFieldThatHasAccessors);
+		// fk
 	}
 
 	AccessModifier getAccessModifier(String methodSignatureArea) {

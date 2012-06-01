@@ -66,7 +66,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
 
     RadioGroupFieldEditor editor_TestingPatternComments;
 
-	// fk コメントフィールド追加.
+	// fk 2012.05.29 コメントフィールド追加.
 	StringFieldEditor editor_Copywrite;
 	StringFieldEditor editor_Author;
 
@@ -244,7 +244,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                         addField(editor_TestingPatternComments);
                     }
 
-					// fk コメントフィールド追加.
+					// fk 2012.05.29 コメントフィールド追加.
 					editor_Author = new StringFieldEditor(
 							Preference.TestClassGen.commentAuthor,
 							props.get(Preference.TestClassGen.commentAuthor),

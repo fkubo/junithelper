@@ -183,7 +183,7 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
                 // ---------------
                 // generate test case source code string
                 
-				// fk 文字コード指定変更.
+				// fk 2012.05.25 文字コード指定変更.
 				String encoding;
 				if (targetClassFile.isAccessible()) {
 					encoding = targetClassFile.getCharset();
@@ -195,12 +195,12 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
 				// String encoding =
 				// UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
 				// .getInputStreamFrom(targetClassFile));
-				// fk
                 InputStream targetInputStream = EclipseIFileUtil.getInputStreamFrom(targetClassFile);
 				// String sourceCodeString =
 				// IOUtil.readAsString(targetInputStream, encoding);
 				String sourceCodeString = IOUtils.toString(targetInputStream,
 						encoding);
+				// fk
                 LineBreakProvider lineBreakProvider = new LineBreakProvider(config, null);
                 TestCaseGenerator generator = TestCaseGeneratorFactory.create(config, lineBreakProvider);
                 generator.initialize(new ClassMetaExtractor(config).extract(sourceCodeString));

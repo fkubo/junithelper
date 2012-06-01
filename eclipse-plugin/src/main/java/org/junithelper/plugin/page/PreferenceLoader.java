@@ -71,7 +71,7 @@ public class PreferenceLoader {
 
     public String classToExtend;
 
-	// fk コメント定義追加.
+	// fk 2012.05.29 コメント定義追加.
 	public String author;
 	// fk
 
@@ -127,7 +127,7 @@ public class PreferenceLoader {
         if (isGivenWhenThenCommentsRequired) {
             config.testingPatternExplicitComment = TestingPatternExplicitComment.GivenWhenThen;
         }
-		// fk コメント定義追加.
+		// fk 2012.05.29 コメント定義追加.
 		TemplateStore templates = JavaPlugin.getDefault()
 				.getCodeTemplateStore();
 		if (templates.findTemplate("filecomment") != null) {
@@ -201,7 +201,7 @@ public class PreferenceLoader {
         // class to extend
         classToExtend = store.getString(Preference.TestClassGen.classToExtend);
 
-		// fk コメント定義追加
+		// fk 2012.05.29 コメント定義追加.
 		author = store.getString(Preference.TestClassGen.commentAuthor);
 		// fk
     }
