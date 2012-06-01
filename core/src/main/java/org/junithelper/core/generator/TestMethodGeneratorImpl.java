@@ -282,7 +282,17 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             // fk 2012.06.01 改行追加.
             appender.appendLineBreak(buf);
             // fk
-            appendTestingPatternExplicitComment(buf, "Arrange", 2);
+            // fk 2012.06.01 Arrangeコメント変更.
+            if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.isAccessor) {
+                if (testMethodMeta.methodMeta.name.startsWith("set")) {
+                    appendTestingPatternExplicitComment(buf, "Arrange：正常系", 2);
+                } else {
+                    appendTestingPatternExplicitComment(buf, "Arrange：正常系：初期値", 2);
+                }
+            } else {
+                appendTestingPatternExplicitComment(buf, "Arrange：正常系", 2);
+            }
+            // fk
 
             // prepare for Mock object framework
             if (config.mockObjectFramework == MockObjectFramework.JMock2) {
@@ -343,7 +353,24 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 appender.appendLineBreak(buf);
                 // fk
                 // Assert or Then
-                appendTestingPatternExplicitComment(buf, "Assert", 2);
+                // fk 2012.06.01 Assertコメント変更.
+                if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.isAccessor) {
+                    if (testMethodMeta.methodMeta.name.startsWith("set")) {
+                        appendTestingPatternExplicitComment(buf, "Assert：指定した値が返却されること", 2);
+                    } else {
+                        if (PrimitiveTypeUtil.isPrimitive(testMethodMeta.methodMeta.returnType.name)) {
+                            String defaultValue = PrimitiveTypeUtil
+                                    .getTypeDefaultValue(testMethodMeta.methodMeta.returnType.name);
+                            appendTestingPatternExplicitComment(buf, "Assert：" + defaultValue + "であること", 2);
+                        } else {
+                            appendTestingPatternExplicitComment(buf, "Assert：nullであること", 2);
+                        }
+
+                    }
+                } else {
+                    appendTestingPatternExplicitComment(buf, "Assert：結果が正しいこと", 2);
+                }
+                // fk
                 // Mockito BDD
                 appendBDDMockitoComment(buf, "then", 2);
                 appendMockVerifying(buf, 2);
