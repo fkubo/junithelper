@@ -71,9 +71,9 @@ public class PreferenceLoader {
 
     public String classToExtend;
 
-	// fk 2012.05.29 コメント定義追加.
-	public String author;
-	// fk
+    // fk 2012.05.29 コメント定義追加.
+    public String author;
+    // fk
 
     private Configuration config = new Configuration();
 
@@ -127,15 +127,13 @@ public class PreferenceLoader {
         if (isGivenWhenThenCommentsRequired) {
             config.testingPatternExplicitComment = TestingPatternExplicitComment.GivenWhenThen;
         }
-		// fk 2012.05.29 コメント定義追加.
-		TemplateStore templates = JavaPlugin.getDefault()
-				.getCodeTemplateStore();
-		if (templates.findTemplate("filecomment") != null) {
-			config.copyright = templates.findTemplate("filecomment")
-					.getPattern();
-		}
-		config.author = author;
-		// fk
+        // fk 2012.05.29 コメント定義追加.
+        TemplateStore templates = JavaPlugin.getDefault().getCodeTemplateStore();
+        if (templates.findTemplate("filecomment") != null) {
+            config.copyright = templates.findTemplate("filecomment").getPattern();
+        }
+        config.author = author;
+        // fk
         return config;
     }
 
@@ -201,9 +199,9 @@ public class PreferenceLoader {
         // class to extend
         classToExtend = store.getString(Preference.TestClassGen.classToExtend);
 
-		// fk 2012.05.29 コメント定義追加.
-		author = store.getString(Preference.TestClassGen.commentAuthor);
-		// fk
+        // fk 2012.05.29 コメント定義追加.
+        author = store.getString(Preference.TestClassGen.commentAuthor);
+        // fk
     }
 
     static final boolean isUsingEasyMock(IPreferenceStore store) {

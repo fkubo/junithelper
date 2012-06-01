@@ -45,9 +45,15 @@ public abstract class AbstractAction extends Action {
             structuredSelection = (StructuredSelection) selection;
         }
         if (!isNotSelected(structuredSelection) && !isSelectedSeveral(structuredSelection)) {
-            String projectName = getProjectName(structuredSelection);
-            String projectRootPath = getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
-                    + StringValue.DirectorySeparator.General + projectName + StringValue.DirectorySeparator.General;
+            // fk 2012/06/01 プロジェクトの絶対パス取得を修正.
+            String projectRootPath = getProjectRootAbsolutePath(structuredSelection);
+            // String projectName = getProjectName(structuredSelection);
+            // String projectRootPath =
+            // getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
+            // + StringValue.DirectorySeparator.General + projectName +
+            // StringValue.DirectorySeparator.General;
+            // StringValue.DirectorySeparator.General;
+            // fk
             String configFilepath = projectRootPath + "junithelper-config.properties";
             File configProperites = new File(configFilepath);
             if (configProperites.exists()) {
@@ -155,6 +161,21 @@ public abstract class AbstractAction extends Action {
     protected IFile getIFile(IProject project, String resourcePath) {
         return project.getFile(resourcePath);
     }
+
+    // fk 2012/06/01 プロジェクトのルートを取得するメソッドを追加.
+    protected String getProjectRootAbsolutePath(StructuredSelection structuredSelection) {
+        if (structuredSelection == null) {
+            return getIWorkspaceRoot().getProject(getProjectName(null)).getLocation().toString();
+        }
+        Object selectionObject = structuredSelection.getFirstElement();
+        if (selectionObject instanceof org.eclipse.jdt.core.IJavaElement) {
+            return ((org.eclipse.jdt.core.IJavaElement) selectionObject).getJavaProject().getProject().getLocation()
+                    .toString();
+        }
+        return null;
+    }
+
+    // fk
 
     protected IEditorPart getIEditorPart(IWorkbenchPage page, IFile file) throws Exception {
         String editorId = EclipseIFileUtil.getIEditorDescriptorFrom(file).getId();

@@ -74,8 +74,13 @@ public class Force4TestCaseAction extends AbstractAction implements IActionDeleg
                     config.directoryPathOfProductSourceCode, config.directoryPathOfTestSourceCode).replaceFirst(
                     "[^(Test)]\\.java$", StringValue.JUnit.TestClassNameSuffix + StringValue.FileExtension.JavaFile);
             String projectName = getProjectName(structuredSelection);
-            String projectRootAbsolutePath = getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
-                    + StringValue.DirectorySeparator.General + projectName + StringValue.DirectorySeparator.General;
+            // fk 2012/06/01 プロジェクトの絶対パス取得を修正.
+            String projectRootAbsolutePath = getProjectRootAbsolutePath(structuredSelection);
+            // String projectRootAbsolutePath =
+            // getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
+            // + StringValue.DirectorySeparator.General + projectName +
+            // StringValue.DirectorySeparator.General;
+            // fk
 
             // ----------------------------------------
             // check selection

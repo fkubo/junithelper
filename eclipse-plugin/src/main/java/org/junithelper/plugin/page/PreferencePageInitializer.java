@@ -29,7 +29,7 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
         // Language
-		store.setDefault(Preference.lang, Preference.Lang.Japanese);
+        store.setDefault(Preference.lang, Preference.Lang.Japanese);
 
         store.setDefault(Preference.Common.outputFileEncoding, new Configuration().outputFileEncoding);
 
@@ -43,40 +43,37 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.Common.softTabSize, 4);
 
         // generating extended test class
-		store.setDefault(Preference.TestClassGen.junitVersion,
-				Preference.TestClassGen.junitVersion4);
+        store.setDefault(Preference.TestClassGen.junitVersion, Preference.TestClassGen.junitVersion4);
         store.setDefault(Preference.TestClassGen.classToExtend, "junit.framework.TestCase");
 
         // generating test methods
         store.setDefault(Preference.TestMethodGen.includePublic, true);
         store.setDefault(Preference.TestMethodGen.includeProtected, true);
         store.setDefault(Preference.TestMethodGen.includePackageLocal, true);
-		store.setDefault(Preference.TestMethodGen.excludesAccessors, false);
+        store.setDefault(Preference.TestMethodGen.excludesAccessors, false);
 
-		store.setDefault(Preference.TestMethodGen.delimiter, "");
+        store.setDefault(Preference.TestMethodGen.delimiter, "");
 
         store.setDefault(Preference.TestMethodGen.enabledArgs, true);
-		store.setDefault(Preference.TestMethodGen.argsPrefix, "");
-		store.setDefault(Preference.TestMethodGen.argsDelimiter, "");
+        store.setDefault(Preference.TestMethodGen.argsPrefix, "");
+        store.setDefault(Preference.TestMethodGen.argsDelimiter, "");
 
         store.setDefault(Preference.TestMethodGen.enabledReturn, false);
         store.setDefault(Preference.TestMethodGen.returnPrefix, "R");
         store.setDefault(Preference.TestMethodGen.returnDelimiter, "$");
 
-		store.setDefault(Preference.TestMethodGen.enabledException, false);
+        store.setDefault(Preference.TestMethodGen.enabledException, false);
         store.setDefault(Preference.TestMethodGen.exceptionPrefix, "T");
         store.setDefault(Preference.TestMethodGen.exceptionDelimiter, "$");
 
         store.setDefault(Preference.TestMethodGen.enabledTestMethodSampleImpl, true);
-		store.setDefault(Preference.TestMethodGen.usingMock,
-				Preference.TestMethodGen.usingMockJMockit);
-		store.setDefault(Preference.TestMethodGen.usingTestingPatternComments,
-				Preference.TestMethodGen.commentsArrangeActAssert);
+        store.setDefault(Preference.TestMethodGen.usingMock, Preference.TestMethodGen.usingMockJMockit);
+        store.setDefault(Preference.TestMethodGen.usingTestingPatternComments,
+                Preference.TestMethodGen.commentsArrangeActAssert);
 
-		// fk 2012.05.29 コメント定義追加.
-		store.setDefault(Preference.TestClassGen.commentAuthor,
-				System.getProperty("user.name"));
-		// fk
+        // fk 2012.05.29 コメント定義追加.
+        store.setDefault(Preference.TestClassGen.commentAuthor, System.getProperty("user.name"));
+        // fk
     }
 
 }

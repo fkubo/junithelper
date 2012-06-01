@@ -29,54 +29,54 @@ import org.mozilla.universalchardet.UniversalDetector;
 
 public final class EclipseIFileUtil {
 
-	public static InputStream getInputStreamFrom(IFile file) throws InvalidPreferenceException {
-		InputStream is = null;
-		try {
-			is = file.getContents();
-		} catch (CoreException ignored) {
-		} catch (NullPointerException e) {
-			throw new InvalidPreferenceException();
-		}
-		return is;
-	}
+    public static InputStream getInputStreamFrom(IFile file) throws InvalidPreferenceException {
+        InputStream is = null;
+        try {
+            is = file.getContents();
+        } catch (CoreException ignored) {
+        } catch (NullPointerException e) {
+            throw new InvalidPreferenceException();
+        }
+        return is;
+    }
 
-	public static String getDetectedEncodingFrom(IFile file, String defaultEncoding) {
+    public static String getDetectedEncodingFrom(IFile file, String defaultEncoding) {
 
-		// fk 2012.05.25 文字コード指定変更.
-		if (file.isAccessible()) {
-			try {
-				return file.getCharset();
-			} catch (CoreException e) {
-				// ignore;
-			}
-		}
-		// fk
+        // fk 2012.05.25 文字コード指定変更.
+        if (file.isAccessible()) {
+            try {
+                return file.getCharset();
+            } catch (CoreException e) {
+                // ignore;
+            }
+        }
+        // fk
 
-		InputStream is = null;
-		String encoding = defaultEncoding == null ? Charset.defaultCharset().name() : defaultEncoding;
-		try {
-			is = EclipseIFileUtil.getInputStreamFrom(file);
-			UniversalDetector detector = new UniversalDetector(null);
-			byte[] buf = new byte[4096];
-			int nread;
-			while ((nread = is.read(buf)) > 0 && !detector.isDone())
-				detector.handleData(buf, 0, nread);
-			detector.dataEnd();
-			encoding = detector.getDetectedCharset();
-		} catch (Exception e) {
-			Stderr.p("EclipseIFileUtil.getDetectedEncodingFrom(IFile): " + e.getClass().getName() + ","
-					+ e.getLocalizedMessage());
-		} finally {
-			IOUtil.close(is);
-			if (encoding == null) {
-				return defaultEncoding;
-			}
-		}
-		return encoding;
-	}
+        InputStream is = null;
+        String encoding = defaultEncoding == null ? Charset.defaultCharset().name() : defaultEncoding;
+        try {
+            is = EclipseIFileUtil.getInputStreamFrom(file);
+            UniversalDetector detector = new UniversalDetector(null);
+            byte[] buf = new byte[4096];
+            int nread;
+            while ((nread = is.read(buf)) > 0 && !detector.isDone())
+                detector.handleData(buf, 0, nread);
+            detector.dataEnd();
+            encoding = detector.getDetectedCharset();
+        } catch (Exception e) {
+            Stderr.p("EclipseIFileUtil.getDetectedEncodingFrom(IFile): " + e.getClass().getName() + ","
+                    + e.getLocalizedMessage());
+        } finally {
+            IOUtil.close(is);
+            if (encoding == null) {
+                return defaultEncoding;
+            }
+        }
+        return encoding;
+    }
 
-	public static IEditorDescriptor getIEditorDescriptorFrom(IFile file) throws Exception {
-		return IDE.getEditorDescriptor(file.getName());
-	}
+    public static IEditorDescriptor getIEditorDescriptorFrom(IFile file) throws Exception {
+        return IDE.getEditorDescriptor(file.getName());
+    }
 
 }

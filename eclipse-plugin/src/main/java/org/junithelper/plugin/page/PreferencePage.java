@@ -66,11 +66,11 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
 
     RadioGroupFieldEditor editor_TestingPatternComments;
 
-	// fk 2012.05.29 コメントフィールド追加.
-	StringFieldEditor editor_Copywrite;
-	StringFieldEditor editor_Author;
+    // fk 2012.05.29 コメントフィールド追加.
+    StringFieldEditor editor_Copywrite;
+    StringFieldEditor editor_Author;
 
-	// fk
+    // fk
 
     public PreferencePage() {
         super(FieldEditorPreferencePage.GRID);
@@ -100,15 +100,15 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     addField(editor_Language);
 
                     // output file encoding
-                    addField(new StringFieldEditor(Preference.Common.outputFileEncoding, props
-                            .get(Preference.Common.outputFileEncoding), parent));
+                    addField(new StringFieldEditor(Preference.Common.outputFileEncoding,
+                            props.get(Preference.Common.outputFileEncoding), parent));
 
                     // src/main/java
-                    addField(new StringFieldEditor(Preference.Common.srcMainPath, props
-                            .get(Preference.Common.srcMainPath), parent));
+                    addField(new StringFieldEditor(Preference.Common.srcMainPath,
+                            props.get(Preference.Common.srcMainPath), parent));
                     // src/test/java
-                    addField(new StringFieldEditor(Preference.Common.srcTestPath, props
-                            .get(Preference.Common.srcTestPath), parent));
+                    addField(new StringFieldEditor(Preference.Common.srcTestPath,
+                            props.get(Preference.Common.srcTestPath), parent));
 
                     // line break policy
                     {
@@ -119,18 +119,18 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                         String[][] lbpLabelAndValues = new String[][] { { props.get(forceCRLF), forceCRLF },
                                 { props.get(forceLF), forceLF }, { props.get(forceNewFileCRLF), forceNewFileCRLF },
                                 { props.get(forceNewFileLF), forceNewFileLF } };
-                        editor_lineBreakPolicy = new RadioGroupFieldEditor(Preference.Common.lineBreakPolicy, props
-                                .get(Preference.LineBreakPolicy.description), 5, lbpLabelAndValues, parent);
+                        editor_lineBreakPolicy = new RadioGroupFieldEditor(Preference.Common.lineBreakPolicy,
+                                props.get(Preference.LineBreakPolicy.description), 5, lbpLabelAndValues, parent);
                         addField(editor_lineBreakPolicy);
                     }
 
                     // Soft tabs
                     {
-                        editor_useSoftTabs = new BooleanFieldEditor(Preference.Common.useSoftTabs, props
-                                .get(Preference.Common.useSoftTabs), parent);
+                        editor_useSoftTabs = new BooleanFieldEditor(Preference.Common.useSoftTabs,
+                                props.get(Preference.Common.useSoftTabs), parent);
                         addField(editor_useSoftTabs);
-                        editor_softTabSize = new StringFieldEditor(Preference.Common.softTabSize, props
-                                .get(Preference.Common.softTabSize), parent);
+                        editor_softTabSize = new StringFieldEditor(Preference.Common.softTabSize,
+                                props.get(Preference.Common.softTabSize), parent);
                         addField(editor_softTabSize);
                     }
 
@@ -140,8 +140,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     String[][] junitVersionsLabelAndValues = new String[][] { { props.get(ver3), ver3 },
                             { props.get(ver4), ver4 }, };
 
-                    editor_JUnitVersion = new RadioGroupFieldEditor(Preference.TestClassGen.junitVersion, props
-                            .get(Preference.TestClassGen.description), 2, junitVersionsLabelAndValues, parent) {
+                    editor_JUnitVersion = new RadioGroupFieldEditor(Preference.TestClassGen.junitVersion,
+                            props.get(Preference.TestClassGen.description), 2, junitVersionsLabelAndValues, parent) {
                         @Override
                         protected void fireValueChanged(String p, Object o, Object n) {
                             super.fireValueChanged(p, o, n);
@@ -152,8 +152,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     addField(editor_JUnitVersion);
 
                     // class to extend
-                    editor_ClassToExtend = new StringFieldEditor(Preference.TestClassGen.classToExtend, props
-                            .get(Preference.TestClassGen.classToExtend), parent);
+                    editor_ClassToExtend = new StringFieldEditor(Preference.TestClassGen.classToExtend,
+                            props.get(Preference.TestClassGen.classToExtend), parent);
                     addField(editor_ClassToExtend);
 
                     // common delimiter setting
@@ -164,8 +164,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     editor_isTestMethodNameArgsRequired = new BooleanFieldEditor(Preference.TestMethodGen.enabledArgs,
                             props.get(Preference.TestMethodGen.enabledArgs), parent);
                     addField(editor_isTestMethodNameArgsRequired);
-                    editor_TestMethodNameArgsPrefix = new StringFieldEditor(Preference.TestMethodGen.argsPrefix, props
-                            .get(Preference.TestMethodGen.argsPrefix), parent);
+                    editor_TestMethodNameArgsPrefix = new StringFieldEditor(Preference.TestMethodGen.argsPrefix,
+                            props.get(Preference.TestMethodGen.argsPrefix), parent);
                     addField(editor_TestMethodNameArgsPrefix);
                     editor_TestMethodNameArgsDelimiter = new StringFieldEditor(Preference.TestMethodGen.argsDelimiter,
                             props.get(Preference.TestMethodGen.argsDelimiter), parent);
@@ -179,27 +179,27 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                             props.get(Preference.TestMethodGen.returnPrefix), parent);
                     addField(editor_TestMethodNameReturnPrefix);
                     editor_TestMethodNameRetrnDelimiter = new StringFieldEditor(
-                            Preference.TestMethodGen.returnDelimiter, props
-                                    .get(Preference.TestMethodGen.returnDelimiter), parent);
+                            Preference.TestMethodGen.returnDelimiter,
+                            props.get(Preference.TestMethodGen.returnDelimiter), parent);
                     addField(editor_TestMethodNameRetrnDelimiter);
 
                     // enable exception thrown
                     editor_isExceptionThrownRequired = new BooleanFieldEditor(
-                            Preference.TestMethodGen.enabledException, props
-                                    .get(Preference.TestMethodGen.enabledException), parent);
+                            Preference.TestMethodGen.enabledException,
+                            props.get(Preference.TestMethodGen.enabledException), parent);
                     addField(editor_isExceptionThrownRequired);
                     editor_TestMethodNameExceptionPrefix = new StringFieldEditor(
-                            Preference.TestMethodGen.exceptionPrefix, props
-                                    .get(Preference.TestMethodGen.exceptionPrefix), parent);
+                            Preference.TestMethodGen.exceptionPrefix,
+                            props.get(Preference.TestMethodGen.exceptionPrefix), parent);
                     addField(editor_TestMethodNameExceptionPrefix);
                     editor_TestMethodNameExceptionDelimiter = new StringFieldEditor(
-                            Preference.TestMethodGen.exceptionDelimiter, props
-                                    .get(Preference.TestMethodGen.exceptionDelimiter), parent);
+                            Preference.TestMethodGen.exceptionDelimiter,
+                            props.get(Preference.TestMethodGen.exceptionDelimiter), parent);
                     addField(editor_TestMethodNameExceptionDelimiter);
 
                     // public methods
-                    editor_isPublicRequired = new BooleanFieldEditor(Preference.TestMethodGen.includePublic, props
-                            .get(Preference.TestMethodGen.includePublic), parent);
+                    editor_isPublicRequired = new BooleanFieldEditor(Preference.TestMethodGen.includePublic,
+                            props.get(Preference.TestMethodGen.includePublic), parent);
                     addField(editor_isPublicRequired);
                     // protected methods
                     editor_isProtectedRequired = new BooleanFieldEditor(Preference.TestMethodGen.includeProtected,
@@ -207,8 +207,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     addField(editor_isProtectedRequired);
                     // package local methods
                     editor_isPackageLocalRequired = new BooleanFieldEditor(
-                            Preference.TestMethodGen.includePackageLocal, props
-                                    .get(Preference.TestMethodGen.includePackageLocal), parent);
+                            Preference.TestMethodGen.includePackageLocal,
+                            props.get(Preference.TestMethodGen.includePackageLocal), parent);
                     addField(editor_isPackageLocalRequired);
 
                     // enable excluding accessors
@@ -238,19 +238,17 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                                 { props.get(comments_none), comments_none }, { props.get(comments_aaa), comments_aaa },
                                 { props.get(comments_gwt), comments_gwt } };
                         editor_TestingPatternComments = new RadioGroupFieldEditor(
-                                Preference.TestMethodGen.usingTestingPatternComments, props
-                                        .get(Preference.TestMethodGen.descriptionForTestingPatternComments), 3,
+                                Preference.TestMethodGen.usingTestingPatternComments,
+                                props.get(Preference.TestMethodGen.descriptionForTestingPatternComments), 3,
                                 commentsLabelAndValues, parent);
                         addField(editor_TestingPatternComments);
                     }
 
-					// fk 2012.05.29 コメントフィールド追加.
-					editor_Author = new StringFieldEditor(
-							Preference.TestClassGen.commentAuthor,
-							props.get(Preference.TestClassGen.commentAuthor),
-							parent);
-					addField(editor_Author);
-					// fk
+                    // fk 2012.05.29 コメントフィールド追加.
+                    editor_Author = new StringFieldEditor(Preference.TestClassGen.commentAuthor,
+                            props.get(Preference.TestClassGen.commentAuthor), parent);
+                    addField(editor_Author);
+                    // fk
 
                 }
             }

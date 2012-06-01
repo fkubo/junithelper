@@ -102,18 +102,32 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
             // get project path, resource path
             projectName = getProjectName(structuredSelection);
             resourcePathForTargetClassFile = getResourcePathForTargetClassFile(structuredSelection);
-            String projectRootAbsolutePath = getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
-                    + StringValue.DirectorySeparator.General + projectName + StringValue.DirectorySeparator.General;
+            // fk 2012/06/01 プロジェクトの絶対パス取得を修正.
+            String projectRootAbsolutePath = getProjectRootAbsolutePath(structuredSelection);
+            //String projectRootAbsolutePath = getWorkspaceRootAbsolutePath(getIWorkspaceRoot())
+            // + StringValue.DirectorySeparator.General + projectName +
+            // StringValue.DirectorySeparator.General;
+            // fk
 
             resourcePathForTestClassFile = resourcePathForTargetClassFile.replaceFirst(
                     config.directoryPathOfProductSourceCode, config.directoryPathOfTestSourceCode).replace(
                     StringValue.FileExtension.JavaFile,
                     StringValue.JUnit.TestClassNameSuffix + StringValue.FileExtension.JavaFile);
+            // fk 2012/06/01 パス修正.
             testCaseCreateFilePath = projectRootAbsolutePath
+                    + StringValue.DirectorySeparator.General
                     + getResourcePathForTargetClassFile(structuredSelection).replace(
                             config.directoryPathOfProductSourceCode, config.directoryPathOfTestSourceCode).replace(
                             StringValue.FileExtension.JavaFile,
                             StringValue.JUnit.TestClassNameSuffix + StringValue.FileExtension.JavaFile);
+            // testCaseCreateFilePath = projectRootAbsolutePath +
+            // getResourcePathForTargetClassFile(structuredSelection).replace(
+            // config.directoryPathOfProductSourceCode,
+            // config.directoryPathOfTestSourceCode).replace(
+            // StringValue.FileExtension.JavaFile,
+            // StringValue.JUnit.TestClassNameSuffix +
+            // StringValue.FileExtension.JavaFile);
+            // ff
             testCaseFileName = (getClassNameFromResourcePathForTargetClassFile(resourcePathForTargetClassFile) + StringValue.FileExtension.JavaFile)
                     .replace(StringValue.FileExtension.JavaFile, StringValue.JUnit.TestClassNameSuffix
                             + StringValue.FileExtension.JavaFile);
@@ -182,25 +196,23 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
 
                 // ---------------
                 // generate test case source code string
-                
-				// fk 2012.05.25 文字コード指定変更.
-				String encoding;
-				if (targetClassFile.isAccessible()) {
-					encoding = targetClassFile.getCharset();
-				} else {
-					encoding = UniversalDetectorUtil
-							.getDetectedEncoding(EclipseIFileUtil
-									.getInputStreamFrom(targetClassFile));
-				}
-				// String encoding =
-				// UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
-				// .getInputStreamFrom(targetClassFile));
+
+                // fk 2012.05.25 文字コード指定変更.
+                String encoding;
+                if (targetClassFile.isAccessible()) {
+                    encoding = targetClassFile.getCharset();
+                } else {
+                    encoding = UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
+                            .getInputStreamFrom(targetClassFile));
+                }
+                // String encoding =
+                // UniversalDetectorUtil.getDetectedEncoding(EclipseIFileUtil
+                // .getInputStreamFrom(targetClassFile));
                 InputStream targetInputStream = EclipseIFileUtil.getInputStreamFrom(targetClassFile);
-				// String sourceCodeString =
-				// IOUtil.readAsString(targetInputStream, encoding);
-				String sourceCodeString = IOUtils.toString(targetInputStream,
-						encoding);
-				// fk
+                // String sourceCodeString =
+                // IOUtil.readAsString(targetInputStream, encoding);
+                String sourceCodeString = IOUtils.toString(targetInputStream, encoding);
+                // fk
                 LineBreakProvider lineBreakProvider = new LineBreakProvider(config, null);
                 TestCaseGenerator generator = TestCaseGeneratorFactory.create(config, lineBreakProvider);
                 generator.initialize(new ClassMetaExtractor(config).extract(sourceCodeString));
