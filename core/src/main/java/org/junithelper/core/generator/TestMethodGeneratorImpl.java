@@ -137,15 +137,21 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 
         StringBuilder buf = new StringBuilder();
 
+        // fk 2012.06.01 フィールド定義Mockかパラメータ定義Mockかを判定するフラグ.
+        boolean isFieldMock = false;
+        // fk
+
         // JMockit
-        if (config.mockObjectFramework == MockObjectFramework.JMockit) {
+        // fk 2012.06.01 フラグで出力内容を切り替える.
+        if (isFieldMock && config.mockObjectFramework == MockObjectFramework.JMockit) {
+            // fk
             // fk 2012.05.29 Mock用のJavaDoc用のコメントを追加.
             List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
             // List<String> mockedFieldsForJMockit =
             // getMockedFieldsForJMockit(testMethodMeta);
             for (String[] mocked : mockedFieldsForJMockit) {
                 // for (String mocked : mockedFieldsForJMockit) {
-                assert (mocked.length == 3);
+                assert (mocked.length == 4);
                 // fk
 
                 // fk 2012.05.29 Mock用JavaDoc作成.
@@ -171,7 +177,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             }
         }
 
-        // fk 2012.05.29 テストメソッド用JavaDoc作成.
+        // fk 2012.05.29 テストメソッド用JavaDoc作成.コメント変更.
         appender.appendTabs(buf, 1);
         buf.append("/**");
         appender.appendLineBreak(buf);
@@ -181,18 +187,36 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
         // buf.append(getTestMethodNamePrefix(testMethodMeta,
         // testMethodMeta.testingTargetException));
 
-        buf.append(testMethodMeta.classMeta.name);
         if (testMethodMeta.methodMeta != null) {
-            buf.append("." + testMethodMeta.methodMeta.name + "(");
+            buf.append(testMethodMeta.methodMeta.name + "(");
             for (int i = 0; i < testMethodMeta.methodMeta.argNames.size(); i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
                 buf.append(testMethodMeta.methodMeta.argTypes.get(i).nameInMethodName);
                 buf.append(" ");
                 buf.append(testMethodMeta.methodMeta.argNames.get(i));
             }
             buf.append(")");
+        } else if (testMethodMeta.isTypeTest) {
+            buf.append("type");
+        } else if (testMethodMeta.isInstantiationTest) {
+            buf.append("instantiation");
         }
         buf.append("用テストメソッド.");
         appender.appendLineBreak(buf);
+
+        // モックコメント追加.
+        List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
+        for (int i = 0; i < mockedFieldsForJMockit.size(); i++) {
+            String[] mocked = mockedFieldsForJMockit.get(i);
+            appender.appendTabs(buf, 1);
+            buf.append(" * @param ");
+            buf.append(mocked[2]);
+            buf.append(" 引数のモック.");
+            appender.appendLineBreak(buf);
+        }
+
         appender.appendTabs(buf, 1);
         buf.append(" */");
         appender.appendLineBreak(buf);
@@ -224,17 +248,30 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
         // }
         // }
         // }
-        buf.append("()");
         // buf.append("() throws ");
         // buf.append(isThrowableRequired ? "Throwable" : "Exception");
+        // fk
+
+        // fk 2012.06.01 引数でMockを渡すよう変更.
+        buf.append("(");
+        for (int i = 0; i < mockedFieldsForJMockit.size(); i++) {
+            String[] mocked = mockedFieldsForJMockit.get(i);
+            if (i > 0) {
+                buf.append(", ");
+            }
+            buf.append("@Mocked final ");
+            buf.append(mocked[3]);
+            buf.append(" ");
+            buf.append(mocked[2]);
+        }
+        buf.append(")");
         // fk
 
         buf.append(" {");
         appender.appendLineBreak(buf);
 
         // fk 2012.06.01 アクセサにTODOメッセージを入れないよう修正.型・生成テストもTODOを除去.
-        if ((testMethodMeta.methodMeta == null || !testMethodMeta.methodMeta.isAccessor)
- && !testMethodMeta.isTypeTest
+        if ((testMethodMeta.methodMeta == null || !testMethodMeta.methodMeta.isAccessor) && !testMethodMeta.isTypeTest
                 && !testMethodMeta.isInstantiationTest) {
             // auto generated todo message
             appender.appendTabs(buf, 2);
@@ -324,7 +361,14 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 // Normal pattern testing
                 // --------------------------------
                 // prepare args
-                appendPreparingArgs(buf, testMethodMeta);
+                // fk 2012.06.01 Mockを除外するパラメータを追加.
+                if (isFieldMock) {
+                    appendPreparingArgs(buf, testMethodMeta, new ArrayList<String[]>());
+                } else {
+                    appendPreparingArgs(buf, testMethodMeta, mockedFieldsForJMockit);
+                }
+                // appendPreparingArgs(buf, testMethodMeta);
+                // fk
                 // mock/stub checking
 
                 // fk 2012.05.28 アクセサも除外するために引数追加.
@@ -437,7 +481,14 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 // Exception pattern testing
                 // --------------------------------
                 // prepare args
-                appendPreparingArgs(buf, testMethodMeta);
+                // fk 2012.06.01 Mockを除外するパラメータを追加.
+                if (isFieldMock) {
+                    appendPreparingArgs(buf, testMethodMeta, new ArrayList<String[]>());
+                } else {
+                    appendPreparingArgs(buf, testMethodMeta, mockedFieldsForJMockit);
+                }
+                // appendPreparingArgs(buf, testMethodMeta);
+                // fk
                 // mock/stub checking
 
                 // fk 2012.05.29 アクセサも除外するために引数追加.
@@ -481,7 +532,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
         return buf.toString();
     }
 
-    void appendPreparingArgs(StringBuilder buf, TestMethodMeta testMethodMeta) {
+    void appendPreparingArgs(StringBuilder buf, TestMethodMeta testMethodMeta, List<String[]> mockedFieldsForJMockit) {
         // prepare args
         int argsLen = testMethodMeta.methodMeta.argTypes.size();
         if (argsLen > 0) {
@@ -491,6 +542,20 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 String typeName = argTypeMeta.name;
                 String argName = testMethodMeta.methodMeta.argNames.get(i);
 
+                // fk 2012.06.01 Mockの値は除外するよう修正.
+                boolean isMockArg = false;
+                for (String[] mocked : mockedFieldsForJMockit){
+                    if (argName.equals(mocked[2])) {
+                        // 停止.
+                        isMockArg = true;
+                        break;
+                    }
+                }
+                if (isMockArg){
+                    continue;
+                }
+                // fk
+                
                 ExtArgPattern extArgPattern = testMethodMeta.extArgPattern;
 
                 boolean isExtArgPatternTarget = false;
@@ -730,9 +795,10 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     // + argName)) {
                     // fk
 
-                    // fk 2012.05.31 Mock用のJavaDoc用のコメントを追加.
+                    // fk 2012.05.31 Mock用のJavaDoc用のコメントを追加.個別の型も追加.
                     dest.add(new String[] { argTypeMeta.name + " " + value.replace("this.", ""),
-                            getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException), argName, });
+                            getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException), argName,
+                            typeName });
                     // dest.add(argTypeMeta.name + " " + value.replace("this.",
                     // ""));
                     // fk

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -241,7 +242,7 @@ public class TestMethodGeneratorImplTest {
 		MethodMeta targetMethodMeta = targetClassMeta.methods.get(0);
 		TestMethodMeta testMethodMeta = generator.getTestMethodMeta(targetMethodMeta);
 		// when
-		generator.appendPreparingArgs(buf, testMethodMeta);
+        generator.appendPreparingArgs(buf, testMethodMeta, new ArrayList<String[]>());
 		// then
 		assertEquals("		String str = null;\r\n		long longValue = 0L;\r\n", buf.toString());
 	}
