@@ -51,6 +51,9 @@ public final class Dialog {
 
         public static final String notTestClass = common + "notTestClass";
 
+        // fk 2012.06.04 複数対応追加
+        public static final String selectOneOnlyConfirm = common + "selectOneOnlyConfirm";
+        // fk
     }
 
 }

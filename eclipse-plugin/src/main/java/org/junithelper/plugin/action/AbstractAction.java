@@ -221,4 +221,10 @@ public abstract class AbstractAction extends Action {
         return MessageDialog.openConfirm(new Shell(), props.get(Dialog.Common.title), message);
     }
 
+    // fk 2012.06.04 複数ファイル実行対応.
+    protected boolean openConfirmForManySelect(PropertiesLoader props, String message) {
+        return MessageDialog.openConfirm(new Shell(), props.get(Dialog.Common.title), message);
+    }
+    // fk
+
 }

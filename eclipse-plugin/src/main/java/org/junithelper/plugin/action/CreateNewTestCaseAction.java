@@ -45,6 +45,7 @@ import org.junithelper.core.util.UniversalDetectorUtil;
 import org.junithelper.plugin.constant.Dialog;
 import org.junithelper.plugin.exception.InvalidPreferenceException;
 import org.junithelper.plugin.io.PropertiesLoader;
+import org.junithelper.plugin.page.PreferenceLoader;
 import org.junithelper.plugin.util.EclipseIFileUtil;
 import org.junithelper.plugin.util.ResourceRefreshUtil;
 
@@ -68,6 +69,11 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
 
         store = getIPreferenceStore();
         Configuration config = getConfiguration(store, selection);
+        // fk 2012.06.04 複数選択でnullになるので修正.
+        if (config == null) {
+            config = new PreferenceLoader(store).getConfig();
+        }
+        // fk
         PropertiesLoader props = getPropertiesLoader(config.language);
 
         StructuredSelection structuredSelection = null;
