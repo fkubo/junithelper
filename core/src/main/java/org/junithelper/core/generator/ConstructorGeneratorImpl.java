@@ -131,6 +131,11 @@ class ConstructorGeneratorImpl implements ConstructorGenerator {
                 }
             }
             buf.append(")");
+            // fk 2012.06.08 Abstract時に空実装を入れておく.
+            if (classMeta.isAbstract) {
+                buf.append("{}");
+            }
+            // fk
             buf.append(StringValue.Semicolon);
             appender.appendLineBreak(buf);
         }

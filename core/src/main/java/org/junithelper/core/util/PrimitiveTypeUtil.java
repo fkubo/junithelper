@@ -148,6 +148,8 @@ public class PrimitiveTypeUtil {
             return true;
         if (typeName.equals("java.sql.Date"))
             return true;
+        if (typeName.equals("java.sql.Time"))
+            return true;
         if (typeName.equals("Timestamp") || typeName.equals("java.sql.Timestamp"))
             return true;
         return false;
@@ -164,11 +166,11 @@ public class PrimitiveTypeUtil {
         if (typeName.equals("Integer"))
             return "Integer.valueOf(" + getTypeDefaultValueForSetter("int") + ")";
         if (typeName.equals("Long"))
-            return "Long.valueOf(" + getTypeDefaultValueForSetter("long") + "L)";
+            return "Long.valueOf(" + getTypeDefaultValueForSetter("long") + ")";
         if (typeName.equals("Character"))
             return "Character.valueOf(" + getTypeDefaultValueForSetter("char") + ")";
         if (typeName.equals("Float"))
-            return "Float.valueOf(" + getTypeDefaultValueForSetter("float") + "F)";
+            return "Float.valueOf(" + getTypeDefaultValueForSetter("float") + ")";
         if (typeName.equals("Double"))
             return "Double.valueOf(" + getTypeDefaultValueForSetter("double") + ")";
         if (typeName.equals("Boolean"))
@@ -181,6 +183,8 @@ public class PrimitiveTypeUtil {
             return "Timestamp.valueOf(\"2012-03-04 05:06:07.89\")";
         if (typeName.equals("java.sql.Date"))
             return "java.sql.Date.valueOf(\"2012-03-04 05:06:07.89\")";
+        if (typeName.equals("java.sql.Time"))
+            return "Time.valueOf(\"05:06:07.89\")";
         if (typeName.equals("Timestamp") || typeName.equals("java.sql.Timestamp"))
             return "Timestamp.valueOf(\"2012-03-04 05:06:07.89\")";
         throw new IllegalArgumentException("Not primitive type : " + typeName);

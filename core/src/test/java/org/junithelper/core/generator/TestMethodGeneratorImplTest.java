@@ -367,8 +367,12 @@ public class TestMethodGeneratorImplTest {
 		// when
 		target.appendMockChecking(buf, depth, testMethodMeta);
 		// then
-		assertEquals("\t\tnew Expectations(){{\r\n			// e.g. : mocked.get(anyString); returns(200);\r\n		}};\r\n", buf
-				.toString());
+        assertEquals(
+                "\t\tnew Expectations(){{\r\n            // e.g. : mocked.get(anyString); result = 200;\r\n      }};\r\n",
+                buf.toString());
+        // assertEquals("\t\tnew Expectations(){{\r\n            // e.g. : mocked.get(anyString); returns(200);\r\n      }};\r\n",
+        // buf
+        // .toString());
 	}
 
 	@Test

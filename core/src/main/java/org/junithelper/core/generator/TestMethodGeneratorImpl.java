@@ -188,22 +188,23 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
         // testMethodMeta.testingTargetException));
 
         if (testMethodMeta.methodMeta != null) {
+            buf.append("{@link ");
             buf.append(testMethodMeta.methodMeta.name + "(");
             for (int i = 0; i < testMethodMeta.methodMeta.argNames.size(); i++) {
                 if (i > 0) {
                     buf.append(", ");
                 }
                 buf.append(testMethodMeta.methodMeta.argTypes.get(i).nameInMethodName);
-                buf.append(" ");
-                buf.append(testMethodMeta.methodMeta.argNames.get(i));
+                // buf.append(" ");
+                // buf.append(testMethodMeta.methodMeta.argNames.get(i));
             }
-            buf.append(")");
+            buf.append("}用");
         } else if (testMethodMeta.isTypeTest) {
             buf.append("type");
         } else if (testMethodMeta.isInstantiationTest) {
             buf.append("instantiation");
         }
-        buf.append("用テストメソッド.");
+        buf.append("テストメソッド.");
         appender.appendLineBreak(buf);
 
         // モックコメント追加.
@@ -213,7 +214,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             appender.appendTabs(buf, 1);
             buf.append(" * @param ");
             buf.append(mocked[2]);
-            buf.append(" 引数のモック.");
+            buf.append(" 引数のモック");
             appender.appendLineBreak(buf);
         }
 
@@ -555,7 +556,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     continue;
                 }
                 // fk
-                
+
                 ExtArgPattern extArgPattern = testMethodMeta.extArgPattern;
 
                 boolean isExtArgPatternTarget = false;
@@ -683,7 +684,12 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             buf.append("// ");
             buf.append(messageValue.getExempliGratia());
             buf.append(" : ");
-            buf.append("mocked.get(anyString); returns(200);");
+
+            // fk 2012.06.08 コメント修正.
+            buf.append("mocked.get(anyString); result = 200;");
+            // buf.append("mocked.get(anyString); returns(200);");
+            // fk
+
             appender.appendLineBreak(buf);
             appender.appendTabs(buf, depth);
             buf.append("}};");

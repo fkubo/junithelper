@@ -114,12 +114,7 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 			addTestMethodMetaToListIfNotExists(dest, meta);
 		}
 		// is testing instantiation required
-		// fk 2012.05.25 abstractクラスもinstantiationのテストを行わない.
-		// if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() >
-		// 0) {
-		if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() > 0
-				&& !targetClassMeta.isAbstract) {
-			// fk
+        if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() > 0) {
 			ConstructorMeta notPrivateConstructor = null;
 			for (ConstructorMeta constructor : targetClassMeta.constructors) {
 				if (constructor.accessModifier != AccessModifier.Private) {
