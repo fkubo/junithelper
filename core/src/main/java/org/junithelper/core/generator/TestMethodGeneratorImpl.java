@@ -16,6 +16,7 @@
 package org.junithelper.core.generator;
 
 import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCode;
+import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCodeList;
 import static org.junithelper.core.generator.GeneratorImplFunction.isCanonicalClassNameUsed;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import org.junithelper.core.meta.MethodMeta;
 import org.junithelper.core.meta.TestMethodMeta;
 import org.junithelper.core.util.Assertion;
 import org.junithelper.core.util.PrimitiveTypeUtil;
+;
 
 class TestMethodGeneratorImpl implements TestMethodGenerator {
 
@@ -189,7 +191,10 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 
         if (testMethodMeta.methodMeta != null) {
             buf.append("{@link ");
-            buf.append(testMethodMeta.methodMeta.name + "(");
+            buf.append(targetClassMeta.name);
+            buf.append("#");
+            buf.append(testMethodMeta.methodMeta.name);
+            buf.append("(");
             for (int i = 0; i < testMethodMeta.methodMeta.argNames.size(); i++) {
                 if (i > 0) {
                     buf.append(", ");
@@ -198,7 +203,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 // buf.append(" ");
                 // buf.append(testMethodMeta.methodMeta.argNames.get(i));
             }
-            buf.append("}用");
+            buf.append(")}用");
         } else if (testMethodMeta.isTypeTest) {
             buf.append("type");
         } else if (testMethodMeta.isInstantiationTest) {
@@ -302,15 +307,29 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             // --------------------------
             // testing instantiation
 
-            String instantiation = getInstantiationSourceCode(config, appender, testMethodMeta);
-            buf.append(instantiation);
-            appender.appendTabs(buf, 2);
-            if (config.junitVersion == JUnitVersion.version3) {
-                buf.append("assertNotNull(target);");
-            } else {
-                buf.append("assertThat(target, notNullValue());");
+            // fk 2012.06.20 複数コンストラクタ対応.
+            for (String instantiation : getInstantiationSourceCodeList(config, appender, testMethodMeta)) {
+                buf.append(instantiation);
+                appender.appendTabs(buf, 2);
+                if (config.junitVersion == JUnitVersion.version3) {
+                    buf.append("assertNotNull(target);");
+                } else {
+                    buf.append("assertThat(target, notNullValue());");
+                }
+                appender.appendLineBreak(buf);
+
             }
-            appender.appendLineBreak(buf);
+
+            //            String instantiation = getInstantiationSourceCode(config, appender, testMethodMeta);
+            //            buf.append(instantiation);
+            //            appender.appendTabs(buf, 2);
+            //            if (config.junitVersion == JUnitVersion.version3) {
+            //                buf.append("assertNotNull(target);");
+            //            } else {
+            //                buf.append("assertThat(target, notNullValue());");
+            //            }
+            //            appender.appendLineBreak(buf);
+            // fk
 
         } else if (config.isTemplateImplementationRequired) {
             // --------------------------

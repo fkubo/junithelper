@@ -1,19 +1,22 @@
-/* 
- * Copyright 2009-2011 junithelper.org. 
+/*
+ * Copyright 2009-2011 junithelper.org.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
+ *     http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
- * either express or implied. See the License for the specific language 
- * governing permissions and limitations under the License. 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package org.junithelper.core.generator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junithelper.core.config.Configuration;
 import org.junithelper.core.config.TestingTarget;
@@ -125,4 +128,51 @@ class GeneratorImplFunction {
         return constructorGenerator.getFirstInstantiationSourceCode(config, testMethodMeta.classMeta);
     }
 
+    // fk 2012.06.20 複数コンストラクタ対応.
+    static List<String> getInstantiationSourceCodeList(Configuration config, SourceCodeAppender appender,
+            TestMethodMeta testMethodMeta) {
+
+        Assertion.on("config").mustNotBeNull(config);
+        Assertion.on("testMethodMeta").mustNotBeNull(testMethodMeta);
+
+        // -----------
+        // Extension
+        if (config.isExtensionEnabled && config.extConfiguration.extInstantiations != null) {
+            for (ExtInstantiation ins : config.extConfiguration.extInstantiations) {
+                if (isCanonicalClassNameUsed(ins.canonicalClassName, testMethodMeta.classMeta.name,
+                        testMethodMeta.classMeta)) {
+                    // add import list
+                    for (String newImport : ins.importList) {
+                        testMethodMeta.classMeta.importedList.add(newImport);
+                    }
+                    // instantiation code
+                    // e.g. Sample target = new Sample();
+                    StringBuilder buf = new StringBuilder();
+                    if (ins.preAssignCode != null && ins.preAssignCode.trim().length() > 0) {
+                        appender.appendExtensionSourceCode(buf, ins.preAssignCode);
+                    }
+                    appender.appendTabs(buf, 2);
+                    buf.append(testMethodMeta.classMeta.name);
+                    buf.append(" target = ");
+                    buf.append(ins.assignCode.trim());
+                    if (!ins.assignCode.trim().endsWith(StringValue.Semicolon)) {
+                        buf.append(StringValue.Semicolon);
+                    }
+                    appender.appendLineBreak(buf);
+                    if (ins.postAssignCode != null && ins.postAssignCode.trim().length() > 0) {
+                        appender.appendExtensionPostAssignSourceCode(buf, ins.postAssignCode,
+                                new String[] { "\\{instance\\}" }, "target");
+                    }
+                    List<String> list = new ArrayList<String>();
+                    list.add(buf.toString());
+                    return list;
+                }
+            }
+        }
+        // TODO better implementation
+        ConstructorGenerator constructorGenerator = ConstructorGeneratorFactory.create(config,
+                appender.getLineBreakProvider());
+        return constructorGenerator.getAllInstantiationSourceCodeList(config, testMethodMeta.classMeta);
+    }
+    // fk
 }
