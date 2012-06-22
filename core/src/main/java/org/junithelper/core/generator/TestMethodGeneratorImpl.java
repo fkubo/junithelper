@@ -16,7 +16,7 @@
 package org.junithelper.core.generator;
 
 import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCode;
-import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCodeList;
+import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCodeTarget;
 import static org.junithelper.core.generator.GeneratorImplFunction.isCanonicalClassNameUsed;
 
 import java.util.ArrayList;
@@ -91,7 +91,24 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             if (testMethodMeta.isTypeTest) {
                 return "type";
             } else if (testMethodMeta.isInstantiationTest) {
-                return "instantiation";
+                // fk 2012.06.20 複数コンストラクタ対応.
+                StringBuilder buf = new StringBuilder();
+                buf.append("instantiation");
+                if (config.testMethodName.isArgsRequired) {
+                    buf.append(config.testMethodName.basicDelimiter);
+                    buf.append(config.testMethodName.argsAreaPrefix);
+                    if (testMethodMeta.constructorMeta == null) {
+                        buf.append(config.testMethodName.argsAreaDelimiter);
+                    } else {
+                        for (ArgTypeMeta argType : testMethodMeta.constructorMeta.argTypes) {
+                            buf.append(config.testMethodName.argsAreaDelimiter);
+                            buf.append(argType.nameInMethodName);
+                        }
+                    }
+                }
+                return buf.toString();
+                // return "instantiation";
+                // fk
             }
         }
         StringBuilder buf = new StringBuilder();
@@ -200,12 +217,23 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     buf.append(", ");
                 }
                 buf.append(testMethodMeta.methodMeta.argTypes.get(i).nameInMethodName);
-                // buf.append(" ");
-                // buf.append(testMethodMeta.methodMeta.argNames.get(i));
             }
             buf.append(")}用");
         } else if (testMethodMeta.isTypeTest) {
             buf.append("type");
+        } else if (testMethodMeta.isInstantiationTest && testMethodMeta.constructorMeta != null) {
+            buf.append("{@link ");
+            buf.append(targetClassMeta.name);
+            buf.append("#");
+            buf.append(targetClassMeta.name);
+            buf.append("(");
+            for (int i = 0; i < testMethodMeta.constructorMeta.argNames.size(); i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(testMethodMeta.constructorMeta.argTypes.get(i).nameInMethodName);
+            }
+            buf.append(")}用");
         } else if (testMethodMeta.isInstantiationTest) {
             buf.append("instantiation");
         }
@@ -308,17 +336,15 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             // testing instantiation
 
             // fk 2012.06.20 複数コンストラクタ対応.
-            for (String instantiation : getInstantiationSourceCodeList(config, appender, testMethodMeta)) {
-                buf.append(instantiation);
-                appender.appendTabs(buf, 2);
-                if (config.junitVersion == JUnitVersion.version3) {
-                    buf.append("assertNotNull(target);");
-                } else {
-                    buf.append("assertThat(target, notNullValue());");
-                }
-                appender.appendLineBreak(buf);
-
+            String instantiation = getInstantiationSourceCodeTarget(config, appender, testMethodMeta);
+            buf.append(instantiation);
+            appender.appendTabs(buf, 2);
+            if (config.junitVersion == JUnitVersion.version3) {
+                buf.append("assertNotNull(target);");
+            } else {
+                buf.append("assertThat(target, notNullValue());");
             }
+            appender.appendLineBreak(buf);
 
             //            String instantiation = getInstantiationSourceCode(config, appender, testMethodMeta);
             //            buf.append(instantiation);

@@ -15,959 +15,490 @@
  */
 package org.junithelper.core.generator;
 
-import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCode;
-import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCodeTarget;
 import static org.junithelper.core.generator.GeneratorImplFunction.isCanonicalClassNameUsed;
+import static org.junithelper.core.generator.GeneratorImplFunction.isPackageLocalMethodAndTestingRequired;
+import static org.junithelper.core.generator.GeneratorImplFunction.isProtectedMethodAndTestingRequired;
+import static org.junithelper.core.generator.GeneratorImplFunction.isPublicMethodAndTestingRequired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junithelper.core.config.Configuration;
 import org.junithelper.core.config.JUnitVersion;
 import org.junithelper.core.config.MessageValue;
 import org.junithelper.core.config.MockObjectFramework;
-import org.junithelper.core.config.TestingPatternExplicitComment;
+import org.junithelper.core.config.extension.ExtArg;
 import org.junithelper.core.config.extension.ExtArgPattern;
-import org.junithelper.core.config.extension.ExtInstantiation;
+import org.junithelper.core.config.extension.ExtReturn;
 import org.junithelper.core.constant.RegExp;
 import org.junithelper.core.constant.StringValue;
-import org.junithelper.core.extractor.AvailableTypeDetector;
+import org.junithelper.core.extractor.ClassMetaExtractor;
+import org.junithelper.core.filter.TrimFilterUtil;
+import org.junithelper.core.meta.AccessModifier;
 import org.junithelper.core.meta.ArgTypeMeta;
 import org.junithelper.core.meta.ClassMeta;
+import org.junithelper.core.meta.ConstructorMeta;
 import org.junithelper.core.meta.ExceptionMeta;
 import org.junithelper.core.meta.MethodMeta;
+import org.junithelper.core.meta.TestCaseMeta;
 import org.junithelper.core.meta.TestMethodMeta;
 import org.junithelper.core.util.Assertion;
-import org.junithelper.core.util.PrimitiveTypeUtil;
-;
+import org.junithelper.core.util.ObjectUtil;
+import org.junithelper.core.util.Stderr;
 
-class TestMethodGeneratorImpl implements TestMethodGenerator {
+class TestCaseGeneratorImpl implements TestCaseGenerator {
 
     private final SourceCodeAppender appender;
+    private boolean isAlreadyInitialized = false;
 
     private final Configuration config;
     private ClassMeta targetClassMeta;
     private final MessageValue messageValue = new MessageValue();
+    private final TestMethodGenerator testMethodGenerator;
 
-    public TestMethodGeneratorImpl(Configuration config, LineBreakProvider lineBreakProvider) {
+    public TestCaseGeneratorImpl(Configuration config, LineBreakProvider lineBreakProvider) {
         this.config = config;
         IndentationProvider indentationProvider = new IndentationProvider(config);
         appender = new SourceCodeAppender(lineBreakProvider, indentationProvider);
+        testMethodGenerator = new TestMethodGeneratorImpl(config, lineBreakProvider);
     }
 
     @Override
-    public void initialize(ClassMeta targetClassMeta) {
+    public TestCaseGeneratorImpl initialize(String targetSourceCodeString) {
+        if (isAlreadyInitialized) {
+            throw new IllegalStateException("Cannnot reuse this instance..");
+        }
+        ClassMetaExtractor classMetaExtractor = new ClassMetaExtractor(config);
+        this.targetClassMeta = classMetaExtractor.extract(targetSourceCodeString);
+        this.testMethodGenerator.initialize(targetClassMeta);
+        this.messageValue.initialize(config.language);
+        this.isAlreadyInitialized = true;
+        return this;
+    }
+
+    @Override
+    public TestCaseGeneratorImpl initialize(ClassMeta targetClassMeta) {
         this.targetClassMeta = targetClassMeta;
-        messageValue.initialize(config.language);
+        this.testMethodGenerator.initialize(targetClassMeta);
+        this.messageValue.initialize(config.language);
+        return this;
     }
 
     @Override
-    public TestMethodMeta getTestMethodMeta(MethodMeta targetMethodMeta) {
-        return getTestMethodMeta(targetMethodMeta, null);
-    }
-
-    @Override
-    public TestMethodMeta getTestMethodMeta(MethodMeta targetMethodMeta, ExceptionMeta exception) {
-        if (targetClassMeta == null) {
-            throw new IllegalStateException("Not initialized");
+    public TestCaseMeta getNewTestCaseMeta() {
+        TestCaseMeta testCaseMeta = new TestCaseMeta();
+        testCaseMeta.target = targetClassMeta;
+        for (MethodMeta targetMethodMeta : testCaseMeta.target.methods) {
+            testCaseMeta.tests.add(testMethodGenerator.getTestMethodMeta(targetMethodMeta));
         }
-        TestMethodMeta testMethodMeta = new TestMethodMeta();
-        testMethodMeta.classMeta = targetClassMeta;
-        testMethodMeta.methodMeta = targetMethodMeta;
-        testMethodMeta.testingTargetException = exception;
-        return testMethodMeta;
+        return testCaseMeta;
     }
 
     @Override
-    public String getTestMethodNamePrefix(TestMethodMeta testMethodMeta) {
-        return getTestMethodNamePrefix(testMethodMeta, null);
-    }
+    public List<TestMethodMeta> getLackingTestMethodMetaList(String currentTestCaseSourceCode) {
 
-    @Override
-    public String getTestMethodNamePrefix(TestMethodMeta testMethodMeta, ExceptionMeta exception) {
-        MethodMeta targetMethodMeta = testMethodMeta.methodMeta;
-        // testing instantiation
-        if (targetMethodMeta == null) {
-            if (testMethodMeta.isTypeTest) {
-                return "type";
-            } else if (testMethodMeta.isInstantiationTest) {
-                // fk 2012.06.20 複数コンストラクタ対応.
-                StringBuilder buf = new StringBuilder();
-                buf.append("instantiation");
-                if (config.testMethodName.isArgsRequired) {
-                    buf.append(config.testMethodName.basicDelimiter);
-                    buf.append(config.testMethodName.argsAreaPrefix);
-                    if (testMethodMeta.constructorMeta == null) {
-                        buf.append(config.testMethodName.argsAreaDelimiter);
-                    } else {
-                        for (ArgTypeMeta argType : testMethodMeta.constructorMeta.argTypes) {
-                            buf.append(config.testMethodName.argsAreaDelimiter);
-                            buf.append(argType.nameInMethodName);
+        Assertion.on("currentTestCaseSourceCode").mustNotBeNull(currentTestCaseSourceCode);
+        Assertion.on("targetClassMeta").mustNotBeNull(targetClassMeta);
+
+        List<TestMethodMeta> dest = new ArrayList<TestMethodMeta>();
+        String checkTargetSourceCode = TrimFilterUtil.doAllFilters(currentTestCaseSourceCode);
+
+        // is testing type safe required
+        if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*type\\("
+                + RegExp.Anything_ZeroOrMore_Min)) {
+            TestMethodMeta meta = new TestMethodMeta();
+            meta.classMeta = targetClassMeta;
+            meta.isTypeTest = true;
+            addTestMethodMetaToListIfNotExists(dest, meta);
+        }
+        // is testing instantiation required
+        if (!targetClassMeta.isEnum && targetClassMeta.constructors.size() > 0) {
+            ConstructorMeta notPrivateConstructor = null;
+            for (ConstructorMeta constructor : targetClassMeta.constructors) {
+                if (constructor.accessModifier != AccessModifier.Private) {
+                    notPrivateConstructor = constructor;
+                    break;
+                }
+            }
+            // instantiation test
+            if (notPrivateConstructor != null) {
+                if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min
+                        + "public\\s+void\\s+[^\\s]*instantiation\\(" + RegExp.Anything_ZeroOrMore_Min)) {
+                    // fk 2012.06.20 複数コンストラクタ対応.
+                    for (ConstructorMeta constructorMeta : targetClassMeta.constructors) {
+                        TestMethodMeta meta = new TestMethodMeta();
+                        meta.classMeta = targetClassMeta;
+                        meta.constructorMeta = constructorMeta;
+                        meta.isInstantiationTest = true;
+                        addTestMethodMetaToListIfNotExists(dest, meta);
+                    }
+
+                    //					TestMethodMeta meta = new TestMethodMeta();
+                    //					meta.classMeta = targetClassMeta;
+                    //					meta.isInstantiationTest = true;
+                    //					addTestMethodMetaToListIfNotExists(dest, meta);
+                    // fk
+                }
+            }
+        }
+        // test methods
+        for (MethodMeta methodMeta : targetClassMeta.methods) {
+
+            try {
+                // exclude accessors
+                if (config.target.isAccessorExcluded && methodMeta.isAccessor) {
+                    continue;
+                }
+                // testing target access modifier
+                if (!isPublicMethodAndTestingRequired(methodMeta, config.target)
+                        && !isProtectedMethodAndTestingRequired(methodMeta, config.target)
+                        && !isPackageLocalMethodAndTestingRequired(methodMeta, config.target)) {
+                    continue;
+                }
+                // -----------
+                // at least one test method for the target
+                // the test method is not already exist
+                StringBuilder IS_ALREADY_EXISTS = new StringBuilder();
+                IS_ALREADY_EXISTS.append(RegExp.Anything_ZeroOrMore_Min);
+                // test method signature prefix
+                TestMethodMeta testMethodMeta = new TestMethodMeta();
+                testMethodMeta.methodMeta = methodMeta;
+                String testMethodNamePrefix = testMethodGenerator.getTestMethodNamePrefix(testMethodMeta);
+                IS_ALREADY_EXISTS.append(testMethodNamePrefix);
+                IS_ALREADY_EXISTS.append("[");
+                IS_ALREADY_EXISTS.append(config.testMethodName.basicDelimiter);
+                IS_ALREADY_EXISTS.append("\\(");
+                IS_ALREADY_EXISTS.append("]");
+                IS_ALREADY_EXISTS.append(RegExp.Anything_ZeroOrMore_Min);
+                if (!checkTargetSourceCode.matches(Matcher.quoteReplacement(IS_ALREADY_EXISTS.toString()))) {
+                    // testing normal pattern
+                    TestMethodMeta meta = testMethodGenerator.getTestMethodMeta(methodMeta);
+                    // extension assertions
+                    meta = appendIfExtensionAssertionsExist(meta, config);
+                    addTestMethodMetaToListIfNotExists(dest, meta);
+                    // testing exception patterns
+                    if (config.target.isExceptionPatternRequired) {
+                        for (ExceptionMeta exceptionMeta : methodMeta.throwsExceptions) {
+                            TestMethodMeta metaEx = testMethodGenerator.getTestMethodMeta(methodMeta, exceptionMeta);
+                            // extension assertions
+                            metaEx = appendIfExtensionAssertionsExist(metaEx, config);
+                            addTestMethodMetaToListIfNotExists(dest, metaEx);
                         }
                     }
                 }
-                return buf.toString();
-                // return "instantiation";
-                // fk
-            }
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append(targetMethodMeta.name);
-        if (config.testMethodName.isArgsRequired) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.argsAreaPrefix);
-            if (targetMethodMeta.argTypes.size() == 0) {
-                buf.append(config.testMethodName.argsAreaDelimiter);
-            } else {
-                for (ArgTypeMeta argType : targetMethodMeta.argTypes) {
-                    buf.append(config.testMethodName.argsAreaDelimiter);
-                    buf.append(argType.nameInMethodName);
-                }
-            }
-        }
-        if (config.testMethodName.isReturnRequired) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.returnAreaPrefix);
-            buf.append(config.testMethodName.returnAreaDelimiter);
-            if (targetMethodMeta.returnType.nameInMethodName == null) {
-                buf.append("void");
-            } else {
-                buf.append(targetMethodMeta.returnType.nameInMethodName);
-            }
-        }
-        if (exception != null) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.exceptionAreaPrefix);
-            buf.append(config.testMethodName.exceptionAreaDelimiter);
-            buf.append(exception.nameInMethodName);
-        }
-        // extension arg patterns
-        if (testMethodMeta.extArgPattern != null) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(testMethodMeta.extArgPattern.extArg.getCanonicalClassNameInMethodName());
-            buf.append("Is");
-            buf.append(testMethodMeta.extArgPattern.getNameWhichFirstCharIsUpper());
-        }
-        return buf.toString();
-    }
-
-    @Override
-    public String getTestMethodSourceCode(TestMethodMeta testMethodMeta) {
-
-        StringBuilder buf = new StringBuilder();
-
-        // fk 2012.06.01 フィールド定義Mockかパラメータ定義Mockかを判定するフラグ.
-        boolean isFieldMock = false;
-        // fk
-
-        // JMockit
-        // fk 2012.06.01 フラグで出力内容を切り替える.
-        if (isFieldMock && config.mockObjectFramework == MockObjectFramework.JMockit) {
-            // fk
-            // fk 2012.05.29 Mock用のJavaDoc用のコメントを追加.
-            List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
-            // List<String> mockedFieldsForJMockit =
-            // getMockedFieldsForJMockit(testMethodMeta);
-            for (String[] mocked : mockedFieldsForJMockit) {
-                // for (String mocked : mockedFieldsForJMockit) {
-                assert (mocked.length == 4);
-                // fk
-
-                // fk 2012.05.29 Mock用JavaDoc作成.
-                appender.appendTabs(buf, 1);
-                buf.append("/** ");
-                buf.append(mocked[1]);
-                buf.append("で利用している引数");
-                buf.append(mocked[2]);
-                buf.append("のMock. */");
-                appender.appendLineBreak(buf);
-                // fk
-
-                appender.appendTabs(buf, 1);
-                buf.append("@Mocked ");
-                appender.appendLineBreak(buf);
-                appender.appendTabs(buf, 1);
-                buf.append(mocked[0]);
-                buf.append(StringValue.Semicolon);
-                appender.appendLineBreak(buf);
-            }
-            if (mockedFieldsForJMockit.size() > 0) {
-                appender.appendLineBreak(buf);
-            }
-        }
-
-        // fk 2012.05.29 テストメソッド用JavaDoc作成.コメント変更.
-        appender.appendTabs(buf, 1);
-        buf.append("/**");
-        appender.appendLineBreak(buf);
-        appender.appendTabs(buf, 1);
-        buf.append(" * ");
-        // buf.append(testMethodMeta.classMeta.name+"."+testMethodMeta.methodMeta.name);
-        // buf.append(getTestMethodNamePrefix(testMethodMeta,
-        // testMethodMeta.testingTargetException));
-
-        if (testMethodMeta.methodMeta != null) {
-            buf.append("{@link ");
-            buf.append(targetClassMeta.name);
-            buf.append("#");
-            buf.append(testMethodMeta.methodMeta.name);
-            buf.append("(");
-            for (int i = 0; i < testMethodMeta.methodMeta.argNames.size(); i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(testMethodMeta.methodMeta.argTypes.get(i).nameInMethodName);
-            }
-            buf.append(")}用");
-        } else if (testMethodMeta.isTypeTest) {
-            buf.append("type");
-        } else if (testMethodMeta.isInstantiationTest && testMethodMeta.constructorMeta != null) {
-            buf.append("{@link ");
-            buf.append(targetClassMeta.name);
-            buf.append("#");
-            buf.append(targetClassMeta.name);
-            buf.append("(");
-            for (int i = 0; i < testMethodMeta.constructorMeta.argNames.size(); i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(testMethodMeta.constructorMeta.argTypes.get(i).nameInMethodName);
-            }
-            buf.append(")}用");
-        } else if (testMethodMeta.isInstantiationTest) {
-            buf.append("instantiation");
-        }
-        buf.append("テストメソッド.");
-        appender.appendLineBreak(buf);
-
-        // モックコメント追加.
-        List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
-        for (int i = 0; i < mockedFieldsForJMockit.size(); i++) {
-            String[] mocked = mockedFieldsForJMockit.get(i);
-            appender.appendTabs(buf, 1);
-            buf.append(" * @param ");
-            buf.append(mocked[2]);
-            buf.append(" 引数のモック");
-            appender.appendLineBreak(buf);
-        }
-
-        appender.appendTabs(buf, 1);
-        buf.append(" */");
-        appender.appendLineBreak(buf);
-        // fk
-
-        // test method signature
-        if (config.junitVersion == JUnitVersion.version3) {
-            appender.appendTabs(buf, 1);
-            buf.append("public void ");
-            buf.append(StringValue.JUnit.TestMethodNamePrefixForJUnitVersion3);
-            buf.append(config.testMethodName.basicDelimiter);
-        } else {
-            appender.appendTabs(buf, 1);
-            buf.append("@Test");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, 1);
-            buf.append("public void ");
-        }
-        buf.append(getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException));
-
-        // fk 2012.05.29 テストメソッドの例外を廃止.
-        // boolean isThrowableRequired = false;
-        // if (testMethodMeta.methodMeta != null &&
-        // testMethodMeta.methodMeta.throwsExceptions != null) {
-        // for (ExceptionMeta ex : testMethodMeta.methodMeta.throwsExceptions) {
-        // if (ex.name.equals("Throwable")) {
-        // isThrowableRequired = true;
-        // break;
-        // }
-        // }
-        // }
-        // buf.append("() throws ");
-        // buf.append(isThrowableRequired ? "Throwable" : "Exception");
-        // fk
-
-        // fk 2012.06.01 引数でMockを渡すよう変更.
-        buf.append("(");
-        for (int i = 0; i < mockedFieldsForJMockit.size(); i++) {
-            String[] mocked = mockedFieldsForJMockit.get(i);
-            if (i > 0) {
-                buf.append(", ");
-            }
-            buf.append("@Mocked final ");
-            buf.append(mocked[3]);
-            buf.append(" ");
-            buf.append(mocked[2]);
-        }
-        buf.append(")");
-        // fk
-
-        buf.append(" {");
-        appender.appendLineBreak(buf);
-
-        // fk 2012.06.01 アクセサにTODOメッセージを入れないよう修正.型・生成テストもTODOを除去.
-        if ((testMethodMeta.methodMeta == null || !testMethodMeta.methodMeta.isAccessor) && !testMethodMeta.isTypeTest
-                && !testMethodMeta.isInstantiationTest) {
-            // auto generated todo message
-            appender.appendTabs(buf, 2);
-            buf.append("// ");
-            buf.append(messageValue.getAutoGeneratedTODOMessage());
-            appender.appendLineBreak(buf);
-        }
-        // fk
-
-        if (testMethodMeta.isTypeTest) {
-            // --------------------------
-            // testing type safe
-
-            appender.appendTabs(buf, 2);
-            if (config.junitVersion == JUnitVersion.version3) {
-                buf.append("assertNotNull(");
-                buf.append(testMethodMeta.classMeta.name);
-                buf.append(".class);");
-            } else {
-                buf.append("assertThat(");
-                buf.append(testMethodMeta.classMeta.name);
-                buf.append(".class, notNullValue());");
-            }
-            appender.appendLineBreak(buf);
-
-        } else if (testMethodMeta.isInstantiationTest) {
-            // --------------------------
-            // testing instantiation
-
-            // fk 2012.06.20 複数コンストラクタ対応.
-            String instantiation = getInstantiationSourceCodeTarget(config, appender, testMethodMeta);
-            buf.append(instantiation);
-            appender.appendTabs(buf, 2);
-            if (config.junitVersion == JUnitVersion.version3) {
-                buf.append("assertNotNull(target);");
-            } else {
-                buf.append("assertThat(target, notNullValue());");
-            }
-            appender.appendLineBreak(buf);
-
-            //            String instantiation = getInstantiationSourceCode(config, appender, testMethodMeta);
-            //            buf.append(instantiation);
-            //            appender.appendTabs(buf, 2);
-            //            if (config.junitVersion == JUnitVersion.version3) {
-            //                buf.append("assertNotNull(target);");
-            //            } else {
-            //                buf.append("assertThat(target, notNullValue());");
-            //            }
-            //            appender.appendLineBreak(buf);
-            // fk
-
-        } else if (config.isTemplateImplementationRequired) {
-            // --------------------------
-            // testing template
-
-            // Arrange or Given
-            // fk 2012.06.01 改行追加.
-            appender.appendLineBreak(buf);
-            // fk
-            // fk 2012.06.01 Arrangeコメント変更.
-            if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.isAccessor) {
-                if (testMethodMeta.methodMeta.name.startsWith("set")) {
-                    appendTestingPatternExplicitComment(buf, "Arrange：正常系", 2);
-                } else {
-                    appendTestingPatternExplicitComment(buf, "Arrange：正常系：初期値", 2);
-                }
-            } else {
-                appendTestingPatternExplicitComment(buf, "Arrange：正常系", 2);
-            }
-            // fk
-
-            // prepare for Mock object framework
-            if (config.mockObjectFramework == MockObjectFramework.JMock2) {
-                appender.appendTabs(buf, 2);
-                buf.append("Mockery context = new Mockery(){{");
-                appender.appendLineBreak(buf);
-                appender.appendTabs(buf, 3);
-                buf.append("setImposteriser(ClassImposteriser.INSTANCE);");
-                appender.appendLineBreak(buf);
-                appender.appendTabs(buf, 2);
-                buf.append("}};");
-                appender.appendLineBreak(buf);
-            }
-            if (config.mockObjectFramework == MockObjectFramework.EasyMock) {
-                appender.appendTabs(buf, 2);
-                buf.append("IMocksControl mocks = EasyMock.createControl();");
-                appender.appendLineBreak(buf);
-            }
-            // instantiation if testing an instance method
-            if (!testMethodMeta.methodMeta.isStatic) {
-                String instantiation = getInstantiationSourceCode(config, appender, testMethodMeta);
-                buf.append(instantiation);
-            }
-            // Mockito BDD
-            appendBDDMockitoComment(buf, "given", 2);
-
-            if (testMethodMeta.testingTargetException == null) {
-                // --------------------------------
-                // Normal pattern testing
-                // --------------------------------
-                // prepare args
-                // fk 2012.06.01 Mockを除外するパラメータを追加.
-                if (isFieldMock) {
-                    appendPreparingArgs(buf, testMethodMeta, new ArrayList<String[]>());
-                } else {
-                    appendPreparingArgs(buf, testMethodMeta, mockedFieldsForJMockit);
-                }
-                // appendPreparingArgs(buf, testMethodMeta);
-                // fk
-                // mock/stub checking
-
-                // fk 2012.05.28 アクセサも除外するために引数追加.
-                appendMockChecking(buf, 2, testMethodMeta);
-                // appendMockChecking(buf, 2);
-                // fk
-
-                // fk 2012.06.01 改行追加.
-                appender.appendLineBreak(buf);
-                // fk
-                // Act or When
-                appendTestingPatternExplicitComment(buf, "Act", 2);
-                // Mockito BDD
-                appendBDDMockitoComment(buf, "when", 2);
-                // return value
-                if (testMethodMeta.methodMeta.returnType != null && testMethodMeta.methodMeta.returnType.name != null) {
-                    appender.appendTabs(buf, 2);
-                    buf.append(testMethodMeta.methodMeta.returnType.name);
-                    buf.append(" actual = ");
-                } else {
-                    appender.appendTabs(buf, 2);
-                }
-                // execute target method
-                appendExecutingTargetMethod(buf, testMethodMeta);
-                // fk 2012.06.01 改行追加.
-                appender.appendLineBreak(buf);
-                // fk
-                // Assert or Then
-                // fk 2012.06.01 Assertコメント変更.
-                if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.isAccessor) {
-                    if (testMethodMeta.methodMeta.name.startsWith("set")) {
-                        appendTestingPatternExplicitComment(buf, "Assert：指定した値が返却されること", 2);
-                    } else {
-                        if (PrimitiveTypeUtil.isPrimitive(testMethodMeta.methodMeta.returnType.name)) {
-                            String defaultValue = PrimitiveTypeUtil
-                                    .getTypeDefaultValue(testMethodMeta.methodMeta.returnType.name);
-                            appendTestingPatternExplicitComment(buf, "Assert：" + defaultValue + "であること", 2);
-                        } else {
-                            appendTestingPatternExplicitComment(buf, "Assert：nullであること", 2);
-                        }
-
-                    }
-                } else {
-                    appendTestingPatternExplicitComment(buf, "Assert：結果が正しいこと", 2);
-                }
-                // fk
-                // Mockito BDD
-                appendBDDMockitoComment(buf, "then", 2);
-                appendMockVerifying(buf, 2);
-                // check return value
-                if (testMethodMeta.methodMeta.returnType != null && testMethodMeta.methodMeta.returnType.name != null) {
-                    if (testMethodMeta.extReturn != null) {
-                        // The return type matches ext return type
-                        if (isCanonicalClassNameUsed(testMethodMeta.extReturn.canonicalClassName,
-                                testMethodMeta.methodMeta.returnType.name, targetClassMeta)) {
-                            for (String assertion : testMethodMeta.extReturn.asserts) {
-                                if (assertion != null && assertion.trim().length() > 0) {
-                                    appender.appendExtensionSourceCode(buf, assertion);
+                // -----------
+                // Extension
+                if (config.isExtensionEnabled) {
+                    // extension arg patterns
+                    List<ExtArg> extArgs = config.extConfiguration.extArgs;
+                    for (ExtArg extArg : extArgs) {
+                        // import and className
+                        for (ArgTypeMeta argType : methodMeta.argTypes) {
+                            if (isCanonicalClassNameUsed(extArg.canonicalClassName, argType.name, targetClassMeta)) {
+                                for (ExtArgPattern pattern : extArg.patterns) {
+                                    // extension pattern is not matched
+                                    // e.g.
+                                    // .*?doSomething_A$String_StringIsNull.*?
+                                    String IS_ALREADY_EXISTS_FOR_PATTERN = RegExp.Anything_ZeroOrMore_Min
+                                            + testMethodNamePrefix + config.testMethodName.basicDelimiter
+                                            + extArg.getCanonicalClassNameInMethodName() + "Is"
+                                            + pattern.getNameWhichFirstCharIsUpper() + RegExp.Anything_ZeroOrMore_Min;
+                                    IS_ALREADY_EXISTS_FOR_PATTERN = Matcher
+                                            .quoteReplacement(IS_ALREADY_EXISTS_FOR_PATTERN);
+                                    if (!checkTargetSourceCode.matches(IS_ALREADY_EXISTS_FOR_PATTERN)) {
+                                        // testing target access modifier
+                                        TestMethodMeta meta = testMethodGenerator.getTestMethodMeta(methodMeta, null);
+                                        meta.extArgPattern = pattern;
+                                        // extension assertions
+                                        meta = appendIfExtensionAssertionsExist(meta, config);
+                                        addTestMethodMetaToListIfNotExists(dest, meta);
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        appender.appendTabs(buf, 2);
-                        buf.append(testMethodMeta.methodMeta.returnType.name);
-                        buf.append(" expected = ");
-                        if (PrimitiveTypeUtil.isPrimitive(testMethodMeta.methodMeta.returnType.name)) {
-                            String defaultValue = PrimitiveTypeUtil
-                                    .getTypeDefaultValue(testMethodMeta.methodMeta.returnType.name);
-                            buf.append(defaultValue);
-                        } else {
-                            buf.append("null");
-                        }
-                        buf.append(StringValue.Semicolon);
-                        appender.appendLineBreak(buf);
-                        appender.appendTabs(buf, 2);
-                        if (config.junitVersion == JUnitVersion.version3) {
-                            buf.append("assertEquals(expected, actual)");
-                        } else {
-                            // fk 2012.05.31 デフォルトのassertThatのequalToを除去.
-                            buf.append("assertThat(actual, is(expected))");
-                            // buf.append("assertThat(actual, is(equalTo(expected)))");
-                            // fk
-                        }
-                        buf.append(StringValue.Semicolon);
-                        appender.appendLineBreak(buf);
-                    }
-                } else {
-                    // fk 2012.05.31 setterアクセサの検証式を変更.
-                    if (testMethodMeta.methodMeta.isAccessor) {
-                        if (testMethodMeta.methodMeta.name.startsWith("set")) {
-                            assert (!testMethodMeta.methodMeta.argTypes.isEmpty());
-                            appender.appendTabs(buf, 2);
-                            if ("boolean".equals(testMethodMeta.methodMeta.argTypes.get(0).name.toLowerCase())) {
-                                buf.append("assertThat(target.is");
-                            } else {
-                                buf.append("assertThat(target.get");
-                            }
-                            buf.append(testMethodMeta.methodMeta.name.substring(3));
-                            buf.append("(), is(");
-                            buf.append(testMethodMeta.methodMeta.argNames.get(0));
-                            buf.append("))");
-                            buf.append(StringValue.Semicolon);
-                            appender.appendLineBreak(buf);
-                        }
-                    }
-                    // fk
-                }
-            } else {
-                // --------------------------------
-                // Exception pattern testing
-                // --------------------------------
-                // prepare args
-                // fk 2012.06.01 Mockを除外するパラメータを追加.
-                if (isFieldMock) {
-                    appendPreparingArgs(buf, testMethodMeta, new ArrayList<String[]>());
-                } else {
-                    appendPreparingArgs(buf, testMethodMeta, mockedFieldsForJMockit);
-                }
-                // appendPreparingArgs(buf, testMethodMeta);
-                // fk
-                // mock/stub checking
-
-                // fk 2012.05.29 アクセサも除外するために引数追加.
-                appendMockChecking(buf, 2, testMethodMeta);
-                // appendMockChecking(buf, 2);
-                // fk
-
-                // try
-                appender.appendTabs(buf, 2);
-                buf.append("try {");
-                appender.appendLineBreak(buf);
-                // Assert or Then
-                appendTestingPatternExplicitComment(buf, "Assert", 3);
-                // Mockito BDD
-                appendBDDMockitoComment(buf, "when", 3);
-                // execute target method
-                appender.appendTabs(buf, 3);
-                appendExecutingTargetMethod(buf, testMethodMeta);
-                // fail when no exception
-                appender.appendTabs(buf, 3);
-                buf.append("fail(\"Expected exception was not thrown!\")");
-                buf.append(StringValue.Semicolon);
-                appender.appendLineBreak(buf);
-                // catch
-                appender.appendTabs(buf, 2);
-                buf.append("} catch (");
-                buf.append(testMethodMeta.testingTargetException.name);
-                buf.append(" e) {");
-                appender.appendLineBreak(buf);
-                // Mockito BDD
-                appendBDDMockitoComment(buf, "then", 3);
-                appender.appendTabs(buf, 2);
-                buf.append("}");
-                appender.appendLineBreak(buf);
-            }
-        }
-        appender.appendTabs(buf, 1);
-        buf.append("}");
-        appender.appendLineBreak(buf);
-
-        return buf.toString();
-    }
-
-    void appendPreparingArgs(StringBuilder buf, TestMethodMeta testMethodMeta, List<String[]> mockedFieldsForJMockit) {
-        // prepare args
-        int argsLen = testMethodMeta.methodMeta.argTypes.size();
-        if (argsLen > 0) {
-            for (int i = 0; i < argsLen; i++) {
-
-                ArgTypeMeta argTypeMeta = testMethodMeta.methodMeta.argTypes.get(i);
-                String typeName = argTypeMeta.name;
-                String argName = testMethodMeta.methodMeta.argNames.get(i);
-
-                // fk 2012.06.01 Mockの値は除外するよう修正.
-                boolean isMockArg = false;
-                for (String[] mocked : mockedFieldsForJMockit){
-                    if (argName.equals(mocked[2])) {
-                        // 停止.
-                        isMockArg = true;
-                        break;
-                    }
-                }
-                if (isMockArg){
-                    continue;
-                }
-                // fk
-
-                ExtArgPattern extArgPattern = testMethodMeta.extArgPattern;
-
-                boolean isExtArgPatternTarget = false;
-                if (extArgPattern != null
-                        && isCanonicalClassNameUsed(extArgPattern.extArg.canonicalClassName, argTypeMeta.name,
-                                testMethodMeta.classMeta)) {
-                    isExtArgPatternTarget = true;
-                }
-
-                ExtInstantiation extInstantiation = null;
-                // -----------
-                // Extension
-                if (config.isExtensionEnabled && config.extConfiguration.extInstantiations != null) {
-                    for (ExtInstantiation ins : config.extConfiguration.extInstantiations) {
-                        if (isCanonicalClassNameUsed(ins.canonicalClassName, argTypeMeta.name, testMethodMeta.classMeta)) {
-                            extInstantiation = ins;
-                            // add import list
-                            for (String newImport : ins.importList) {
-                                testMethodMeta.classMeta.importedList.add(newImport);
-                            }
-                            break;
-                        }
                     }
                 }
 
-                // --------------------------
-                // extension : pre-assign
-                if (isExtArgPatternTarget) {
-                    // arg patterns
-                    if (extArgPattern.preAssignCode != null) {
-                        appender.appendExtensionSourceCode(buf, extArgPattern.preAssignCode);
-                    }
-                } else {
-                    if (extInstantiation != null && extInstantiation.preAssignCode != null
-                            && extInstantiation.preAssignCode.trim().length() > 0) {
-                        appender.appendExtensionSourceCode(buf, extInstantiation.preAssignCode);
-                    }
-                }
-
-                appender.appendTabs(buf, 2);
-                // fk 2012.05.28 JMockitでも引数をfinalになるよう変更.
-                if (config.mockObjectFramework == MockObjectFramework.JMock2
-                        || config.mockObjectFramework == MockObjectFramework.JMockit) {
-                    // if (config.mockObjectFramework ==
-                    // MockObjectFramework.JMock2) {
-                    buf.append("final ");
-                }
-                // fk
-                buf.append(typeName);
-                buf.append(" ");
-                buf.append(argName);
-                buf.append(" = ");
-                if (isExtArgPatternTarget) {
-                    buf.append(extArgPattern.assignCode.trim());
-                    // --------------------------
-                    // extension : assign
-                    if (!extArgPattern.assignCode.endsWith(StringValue.Semicolon)) {
-                        buf.append(StringValue.Semicolon);
-                    }
-                } else {
-                    // simply instantiation or extension instantiation
-                    buf.append(getArgValue(testMethodMeta, argTypeMeta, argName));
-                    buf.append(StringValue.Semicolon);
-                }
-                appender.appendLineBreak(buf);
-
-                // --------------------------
-                // extension : post-assign
-                // arg patterns
-                if (isExtArgPatternTarget) {
-                    if (extArgPattern.postAssignCode != null) {
-                        appender.appendExtensionPostAssignSourceCode(buf, extArgPattern.postAssignCode, new String[] {
-                                "\\{arg\\}", "\\{instance\\}" }, argName);
-                    }
-                } else {
-                    if (extInstantiation != null && extInstantiation.postAssignCode != null
-                            && extInstantiation.postAssignCode.trim().length() > 0) {
-                        appender.appendExtensionPostAssignSourceCode(buf, extInstantiation.postAssignCode,
-                                new String[] { "\\{arg\\}", "\\{instance\\}" }, argName);
-                    }
-                }
-            }
-        }
-    }
-
-    // fk 2012.05.28 アクセサも除外するために引数追加.
-    void appendMockChecking(StringBuilder buf, int depth, TestMethodMeta testMethodMeta) {
-        // void appendMockChecking(StringBuilder buf, int depth) {
-        // fk
-
-        // fk 2012.05.28 isAccessor の時も出力しない.
-        if (testMethodMeta.methodMeta.isAccessor) {
-            return;
-        }
-        // fk
-
-        if (config.mockObjectFramework == MockObjectFramework.EasyMock) {
-            appender.appendTabs(buf, depth);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
-            buf.append("EasyMock.expect(mocked.called()).andReturn(1);");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth);
-            buf.append("mocks.replay();");
-            appender.appendLineBreak(buf);
-        } else if (config.mockObjectFramework == MockObjectFramework.JMock2) {
-            appender.appendTabs(buf, depth);
-            buf.append("context.checking(new Expectations(){{");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth + 1);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
-            buf.append("allowing(mocked).called(); will(returnValue(1));");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth);
-            buf.append("}});");
-            appender.appendLineBreak(buf);
-        } else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
-            appender.appendTabs(buf, depth);
-            buf.append("new Expectations(){{");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth + 1);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
-
-            // fk 2012.06.08 コメント修正.
-            buf.append("mocked.get(anyString); result = 200;");
-            // buf.append("mocked.get(anyString); returns(200);");
-            // fk
-
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth);
-            buf.append("}};");
-            appender.appendLineBreak(buf);
-        } else if (config.mockObjectFramework == MockObjectFramework.Mockito) {
-            appender.appendTabs(buf, depth);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
-            buf.append("given(mocked.called()).willReturn(1);");
-            appender.appendLineBreak(buf);
-        }
-    }
-
-    void appendMockVerifying(StringBuilder buf, int depth) {
-        // verfiy
-        if (config.mockObjectFramework == MockObjectFramework.EasyMock) {
-            appender.appendTabs(buf, depth);
-            buf.append("mocks.verify();");
-            appender.appendLineBreak(buf);
-        }
-        if (config.mockObjectFramework == MockObjectFramework.Mockito) {
-            appender.appendTabs(buf, depth);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
-            buf.append("verify(mocked).called();");
-            appender.appendLineBreak(buf);
-        }
-    }
-
-    void appendExecutingTargetMethod(StringBuilder buf, TestMethodMeta testMethodMeta) {
-        String actor = (testMethodMeta.methodMeta.isStatic) ? testMethodMeta.classMeta.name : "target";
-        buf.append(actor);
-        buf.append(".");
-        buf.append(testMethodMeta.methodMeta.name);
-        buf.append("(");
-        int argsLen = testMethodMeta.methodMeta.argTypes.size();
-        if (argsLen > 0) {
-            buf.append(testMethodMeta.methodMeta.argNames.get(0));
-        }
-        if (argsLen > 1) {
-            for (int i = 1; i < argsLen; i++) {
-                buf.append(StringValue.Comma);
-                buf.append(StringValue.Space);
-                buf.append(testMethodMeta.methodMeta.argNames.get(i));
-            }
-        }
-        buf.append(")");
-        buf.append(StringValue.Semicolon);
-        appender.appendLineBreak(buf);
-    }
-
-    void appendBDDMockitoComment(StringBuilder buf, String value, int depth) {
-        if (config.mockObjectFramework == MockObjectFramework.Mockito) {
-            appender.appendTabs(buf, depth);
-            buf.append("// ");
-            buf.append(value);
-            appender.appendLineBreak(buf);
-        }
-    }
-
-    void appendTestingPatternExplicitComment(StringBuilder buf, String value, int depth) {
-        if (config.testingPatternExplicitComment != TestingPatternExplicitComment.None
-                && config.mockObjectFramework != MockObjectFramework.Mockito) {
-            if (config.testingPatternExplicitComment == TestingPatternExplicitComment.GivenWhenThen) {
-                if (value.equals("Arrange")) {
-                    value = "Given";
-                } else if (value.equals("Act")) {
-                    value = "When";
-                } else if (value.equals("Assert")) {
-                    value = "Then";
-                }
-            }
-            appender.appendTabs(buf, depth);
-            buf.append("// ");
-            buf.append(value);
-            appender.appendLineBreak(buf);
-        }
-    }
-
-    // fk 2012.05.31 Mock用のJavaDoc用のコメントを追加.
-    List<String[]> getMockedFieldsForJMockit(TestMethodMeta testMethodMeta) {
-        List<String[]> dest = new ArrayList<String[]>();
-        // fk
-        if (testMethodMeta.methodMeta != null) {
-            int len = testMethodMeta.methodMeta.argTypes.size();
-            for (int i = 0; i < len; i++) {
-                String typeName = testMethodMeta.methodMeta.argTypes.get(i).name;
-                if (PrimitiveTypeUtil.isPrimitive(typeName)) {
-                    continue;
-                }
-                // fk 2012/06/01 モック作成条件追加.
-                if (PrimitiveTypeUtil.isSimpleObjectType(typeName)) {
-                    continue;
-                }
-                // fk
-                if (!new AvailableTypeDetector(targetClassMeta).isJMockitMockableType(typeName)) {
-                    continue;
-                }
-                ArgTypeMeta argTypeMeta = testMethodMeta.methodMeta.argTypes.get(i);
-                String argName = testMethodMeta.methodMeta.argNames.get(i);
-                String value = getArgValue(testMethodMeta, argTypeMeta, argName);
-                // fk 2012.05.29 Mockの変数名をカスタマイズ.
-                if (value.equals(getJMockitName(testMethodMeta, testMethodMeta.testingTargetException, argName))) {
-                    // if (value.equals("this."
-                    // + getTestMethodNamePrefix(testMethodMeta,
-                    // testMethodMeta.testingTargetException) + "_"
-                    // + argName)) {
-                    // fk
-
-                    // fk 2012.05.31 Mock用のJavaDoc用のコメントを追加.個別の型も追加.
-                    dest.add(new String[] { argTypeMeta.name + " " + value.replace("this.", ""),
-                            getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException), argName,
-                            typeName });
-                    // dest.add(argTypeMeta.name + " " + value.replace("this.",
-                    // ""));
-                    // fk
-                }
+            } catch (Exception e) {
+                String errorMessage = "  I'm sorry, \"" + methodMeta.name + "\" is skipped because of internal error("
+                        + e.getClass().getName() + "," + e.getLocalizedMessage() + ").";
+                Stderr.p(errorMessage);
             }
         }
         return dest;
     }
 
-    // fk 2012.05.31 コメント追加のみ.
-    // テスト前に設定する変数値.
-    // fk
-    String getArgValue(TestMethodMeta testMethodMeta, ArgTypeMeta argTypeMeta, String argName) {
-
-        Assertion.on("testMethodMeta").mustNotBeNull(testMethodMeta);
-        Assertion.on("argTypeMeta").mustNotBeNull(argTypeMeta);
-        Assertion.on("argName").mustNotBeEmpty(argName);
-
-        // -----------
-        // Extension
-        if (config.isExtensionEnabled && config.extConfiguration.extInstantiations != null) {
-            for (ExtInstantiation ins : config.extConfiguration.extInstantiations) {
-                if (isCanonicalClassNameUsed(ins.canonicalClassName, argTypeMeta.name, testMethodMeta.classMeta)) {
-                    return ins.assignCode.trim();
+    static void addTestMethodMetaToListIfNotExists(List<TestMethodMeta> dest, TestMethodMeta meta) {
+        for (TestMethodMeta each : dest) {
+            if (each.methodMeta != null && meta.methodMeta != null && each.methodMeta.name.equals(meta.methodMeta.name)) {
+                if (each.testingTargetException != null && meta.testingTargetException != null
+                        && each.testingTargetException.name.equals(meta.testingTargetException.name)) {
+                    return;
                 }
-            }
-        }
-        AvailableTypeDetector availableTypeDetector = new AvailableTypeDetector(targetClassMeta);
-
-        // fk 2012.06.01 判定順番の変更 isPrimitiveXxxを先に.
-        // fk
-        if (PrimitiveTypeUtil.isPrimitive(argTypeMeta.name)) {
-            // fk 2012.05.31 setterアクセサのStringだけ特別扱い.
-            if (testMethodMeta.methodMeta.name.startsWith("set") && testMethodMeta.methodMeta.isAccessor) {
-                return PrimitiveTypeUtil.getTypeDefaultValueForSetter(argTypeMeta.name);
-            }
-            // fk
-            return PrimitiveTypeUtil.getTypeDefaultValue(argTypeMeta.name);
-            // fk 2012.06.01 primitiveWrapperの処理を追加.
-        } else if (PrimitiveTypeUtil.isSimpleObjectType(argTypeMeta.name)) {
-            if (testMethodMeta.methodMeta.name.startsWith("set") && testMethodMeta.methodMeta.isAccessor) {
-                return PrimitiveTypeUtil.getSimpleObjectTypeDefaultValueForSetter(argTypeMeta.name);
-            }
-            return "null";
-            // fk
-        } else if (availableTypeDetector.isJavaLangPackageType(argTypeMeta.name)) {
-            // fk 2012.06.01
-            // setterアクセサのString,Object,BigInteger,BigDecimalだけ特別扱い.
-            if (testMethodMeta.methodMeta.name.startsWith("set") && testMethodMeta.methodMeta.isAccessor) {
-                if ("String".equals(argTypeMeta.name) || "Object".equals(argTypeMeta.name)) {
-                    return "\"" + argName + "\"";
-                } else if ("BigInteger".equals(argTypeMeta.name)) {
-                    return "BigInteger.valueOf(999)";
-                } else if ("BigDecimal".equals(argTypeMeta.name)) {
-                    return "BigDecimal.valueOf(999.99)";
-                } else {
-                    return "null";
+                if (each.extArgPattern != null
+                        && meta.extArgPattern != null
+                        && each.extArgPattern.getNameWhichFirstCharIsUpper().equals(
+                                meta.extArgPattern.getNameWhichFirstCharIsUpper())) {
+                    return;
                 }
-            }
-            // fk
-            return "null";
-        } else if (argTypeMeta.name.matches(".+?\\[\\]$")) {
-            return "new " + argTypeMeta.name + " {}";
-        } else if (argTypeMeta.name.matches("List(<[^>]+>)?")
-                && availableTypeDetector.isAvailableType("java.util.List", config)) {
-            targetClassMeta.importedList.add("java.util.ArrayList");
-            String genericsString = argTypeMeta.getGenericsAsString();
-            if (genericsString.equals("<?>")) {
-                genericsString = "";
-            }
-            return "new ArrayList" + genericsString + "()";
-        } else if (argTypeMeta.name.matches("Map(<[^>]+>)?")
-                && availableTypeDetector.isAvailableType("java.util.Map", config)) {
-            targetClassMeta.importedList.add("java.util.HashMap");
-            String genericsString = argTypeMeta.getGenericsAsString();
-            if (genericsString.matches("<.*\\?.*>")) {
-                genericsString = "";
-            }
-            return "new HashMap" + genericsString + "()";
-        } else if (config.mockObjectFramework == MockObjectFramework.EasyMock) {
-            return "mocks.createMock(" + argTypeMeta.name.replaceAll(RegExp.Generics, StringValue.Empty) + ".class)";
-        } else if (config.mockObjectFramework == MockObjectFramework.JMock2) {
-            return "context.mock(" + argTypeMeta.name.replaceAll(RegExp.Generics, StringValue.Empty) + ".class)";
-        } else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
-            if (new AvailableTypeDetector(targetClassMeta).isJMockitMockableType(argTypeMeta.name)) {
-                // fk 2012.05.29 Mockの変数名をカスタマイズ.
-                return getJMockitName(testMethodMeta, testMethodMeta.testingTargetException, argName);
-                // return "this." + getTestMethodNamePrefix(testMethodMeta,
-                // testMethodMeta.testingTargetException) + "_"
-                // + argName;
-                // fk
             } else {
-                return "null";
+                if (each.isTypeTest == true && meta.isTypeTest == true) {
+                    return;
+                }
+                if (each.isInstantiationTest == true && meta.isInstantiationTest == true) {
+                    return;
+                }
             }
-        } else if (config.mockObjectFramework == MockObjectFramework.Mockito) {
-            return "mock(" + argTypeMeta.name.replaceAll(RegExp.Generics, StringValue.Empty) + ".class)";
+        }
+        dest.add(meta);
+    }
+
+    static TestMethodMeta appendIfExtensionAssertionsExist(TestMethodMeta testMethodMeta, Configuration config) {
+        if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.returnType != null
+                && testMethodMeta.methodMeta.returnType.name != null) {
+            // -----------
+            // Extension
+            if (config.isExtensionEnabled) {
+                List<ExtReturn> extReturns = config.extConfiguration.extReturns;
+                if (extReturns != null && extReturns.size() > 0) {
+                    for (ExtReturn extReturn : extReturns) {
+                        // The return type matches ext return type
+                        if (isCanonicalClassNameUsed(extReturn.canonicalClassName,
+                                testMethodMeta.methodMeta.returnType.name, testMethodMeta.classMeta)) {
+                            testMethodMeta.extReturn = extReturn;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return testMethodMeta;
+    }
+
+    @Override
+    public String getNewTestCaseSourceCode() {
+        StringBuilder buf = new StringBuilder();
+
+        // fk 2012.05.29 Copyright追加.
+        if (config.copyright != null && config.copyright.trim().length() > 0) {
+            buf.append(config.copyright);
+            appender.appendLineBreak(buf);
+        }
+        // fk
+
+        if (targetClassMeta.packageName != null && targetClassMeta.packageName.trim().length() > 0) {
+            buf.append("package ");
+            buf.append(targetClassMeta.packageName);
+            buf.append(";");
+            appender.appendLineBreak(buf);
+            appender.appendLineBreak(buf);
+        }
+        for (String imported : targetClassMeta.importedList) {
+            if (imported != null && imported.trim().length() > 0) {
+                buf.append("import ");
+                buf.append(imported);
+                buf.append(";");
+                appender.appendLineBreak(buf);
+            }
+        }
+        // JUnit 3.x or specified super class
+        if (config.testCaseClassNameToExtend != null && config.testCaseClassNameToExtend.trim().length() > 0) {
+            if (config.junitVersion == JUnitVersion.version3
+                    || !config.testCaseClassNameToExtend.equals("junit.framework.TestCase")) {
+                buf.append("import ");
+                buf.append(config.testCaseClassNameToExtend);
+                buf.append(";");
+                appender.appendLineBreak(buf);
+                appender.appendLineBreak(buf);
+            }
         } else {
-            return "null";
+            appender.appendLineBreak(buf);
         }
+
+        // fk 2012.05.29 クラス用JavaDoc追加.
+        buf.append("/**");
+        appender.appendLineBreak(buf);
+        buf.append(" * <H3>");
+        appender.appendLineBreak(buf);
+        buf.append(" * ");
+        buf.append(targetClassMeta.name);
+        buf.append("のテストクラス.</H3>");
+        appender.appendLineBreak(buf);
+        buf.append(" * ");
+        appender.appendLineBreak(buf);
+        if (config.author != null && config.author.trim().length() > 0) {
+            buf.append(" * @author ");
+            buf.append(config.author);
+            appender.appendLineBreak(buf);
+        }
+        buf.append(" */");
+        appender.appendLineBreak(buf);
+        // fk
+
+        buf.append("public class ");
+        buf.append(targetClassMeta.name);
+        buf.append("Test ");
+        // JUnit 3.x or specified super class
+        if (config.testCaseClassNameToExtend != null && config.testCaseClassNameToExtend.trim().length() > 0) {
+            if (config.junitVersion == JUnitVersion.version3
+                    || !config.testCaseClassNameToExtend.equals("junit.framework.TestCase")) {
+                buf.append("extends ");
+                String[] splittedArray = config.testCaseClassNameToExtend.split("\\.");
+                buf.append(splittedArray[splittedArray.length - 1]);
+                buf.append(" ");
+            }
+        }
+        buf.append("{");
+        appender.appendLineBreak(buf);
+        appender.appendLineBreak(buf);
+        buf.append("}");
+        appender.appendLineBreak(buf);
+        return getTestCaseSourceCodeWithLackingTestMethod(buf.toString());
     }
 
-    // fk 2012.05.29 Mockの変数名をカスタマイズ.
-    private String getJMockitName(TestMethodMeta testMethodMeta, ExceptionMeta exceptionMeta, String argName) {
-
-        assert (argName != null && argName.length() > 0);
-
-        // 元の実装を変更し、_区切りではなくて、大文字でつなぐ.
-        StringBuilder sb = new StringBuilder();
-        sb.append("this.");
-        sb.append(getTestMethodNamePrefix(testMethodMeta, testMethodMeta.testingTargetException));
-        sb.append(argName.substring(0, 1).toUpperCase());
-        if (argName.length() > 1) {
-            sb.append(argName.substring(1));
+    @Override
+    public String getTestCaseSourceCodeWithLackingTestMethod(String currentTestCaseSourceCode) {
+        String dest = currentTestCaseSourceCode;
+        // lacking test methods
+        StringBuilder buf = new StringBuilder();
+        List<TestMethodMeta> lackingTestMethodMetaList = getLackingTestMethodMetaList(currentTestCaseSourceCode);
+        if (lackingTestMethodMetaList.size() == 0) {
+            // not modified
+            return dest;
         }
-        return sb.toString();
-        // return "this." + getTestMethodNamePrefix(testMethodMeta,
-        // exceptionMeta)
-        // + "_" + argName;
+        for (TestMethodMeta testMethodMeta : lackingTestMethodMetaList) {
+            // method signature
+            buf.append(testMethodGenerator.getTestMethodSourceCode(testMethodMeta));
+            buf.append(StringValue.CarriageReturn);
+            buf.append(StringValue.LineFeed);
+            // append import if defined
+            if (testMethodMeta.extArgPattern != null) {
+                for (String newImport : testMethodMeta.extArgPattern.extArg.importList) {
+                    targetClassMeta.importedList.add(newImport);
+                }
+            }
+            if (testMethodMeta.extReturn != null) {
+                for (String newImport : testMethodMeta.extReturn.importList) {
+                    targetClassMeta.importedList.add(newImport);
+                }
+            }
+        }
+        dest = dest.replaceFirst("}[^}]*$", "");
+        String lackingSourceCode = buf.toString();
+        dest += lackingSourceCode + "}\r\n";
+        dest = appendRequiredImportListToSourceCode(dest, targetClassMeta, config);
+        return dest;
     }
-    // fk
+
+    @Override
+    public String getUnifiedVersionTestCaseSourceCode(String currentTestCaseSourceCode, JUnitVersion version) {
+        String dest = currentTestCaseSourceCode;
+        ClassMeta classMeta = new ClassMetaExtractor(config).extract(currentTestCaseSourceCode);
+        Configuration config = ObjectUtil.deepCopy(this.config);
+        if (version == JUnitVersion.version3) {
+            dest = dest.replaceAll("@Test[\\s\r\n]*public void ", "public void test"
+                    + config.testMethodName.basicDelimiter);
+            String[] splittedArray = config.testCaseClassNameToExtend.split("\\.");
+            String testCaseName = splittedArray[splittedArray.length - 1];
+            dest = dest.replaceFirst(classMeta.name + "\\s*\\{", classMeta.name + " extends " + testCaseName + " {");
+            config.junitVersion = JUnitVersion.version3;
+            dest = appendRequiredImportListToSourceCode(dest, targetClassMeta, config);
+        } else if (version == JUnitVersion.version4) {
+            dest = dest.replaceAll("public void test" + config.testMethodName.basicDelimiter,
+                    "@Test \r\n\tpublic void ");
+            // When it is changed to JUnit 4.x style,
+            // "junit.framework.TestCase" inheritance should be removed.
+            String REGEXP_FOR_SUPER_CLASS = ".+\\s+extends\\s+([^{]+)\\s*\\{.+";
+            String REGEXP_FOR_IMPORT_TEST_CASE = ".+import\\s+junit.framework.TestCase;.+";
+            String TEST_CASE_CLASS_WITH_PACAKGE = "junit.framework.TestCase";
+            String TEST_CASE_CLASS = "TestCase";
+            String destWithoutCRLF = dest.replaceAll("\r", "").replaceAll("\n", "");
+            if (destWithoutCRLF.matches(REGEXP_FOR_SUPER_CLASS)) {
+                Matcher matcher = Pattern.compile(REGEXP_FOR_SUPER_CLASS).matcher(destWithoutCRLF);
+                if (matcher.matches()) {
+                    String matched = matcher.group(1);
+                    if (matched.trim().equals(TEST_CASE_CLASS_WITH_PACAKGE)) {
+                        dest = dest.replaceFirst(classMeta.name + "\\s+extends\\s+.+\\s*\\{", classMeta.name + " {");
+                    } else if (matched.trim().equals(TEST_CASE_CLASS)
+                            && destWithoutCRLF.matches(REGEXP_FOR_IMPORT_TEST_CASE)) {
+                        dest = dest.replaceFirst(classMeta.name + "\\s+extends\\s+.+\\s*\\{", classMeta.name + " {")
+                                .replaceAll("import\\s+junit.framework.TestCase;", "");
+                    }
+                }
+            }
+            config.junitVersion = JUnitVersion.version4;
+            dest = appendRequiredImportListToSourceCode(dest, targetClassMeta, config);
+        }
+        return dest;
+    }
+
+    String appendRequiredImportListToSourceCode(String sourceCode, ClassMeta targetClassMeta, Configuration config) {
+
+        Assertion.on("targetClassMeta").mustNotBeNull(targetClassMeta);
+
+        String dest = sourceCode;
+        String oneline = TrimFilterUtil.doAllFilters(sourceCode);
+        StringBuilder importedListBuf = new StringBuilder();
+
+        // to uniq collection
+        List<String> uniqImportedList = new ArrayList<String>();
+        for (String imported : targetClassMeta.importedList) {
+            if (!uniqImportedList.contains(imported.trim())) {
+                uniqImportedList.add(imported.trim());
+            }
+        }
+        for (String imported : uniqImportedList) {
+            String newOne = "import " + imported + ";";
+            if (!oneline.matches(RegExp.Anything_ZeroOrMore_Min + newOne + RegExp.Anything_ZeroOrMore_Min)) {
+                importedListBuf.append(newOne);
+                importedListBuf.append(StringValue.CarriageReturn);
+                importedListBuf.append(StringValue.LineFeed);
+            }
+        }
+        // Inner classes of test target class
+        String prefix = targetClassMeta.packageName == null ? "" : targetClassMeta.packageName + ".";
+        appender.appendIfNotExists(importedListBuf, oneline, "import " + prefix + targetClassMeta.name + ".*;");
+        // JUnit
+        if (config.junitVersion == JUnitVersion.version3) {
+            appender.appendIfNotExists(importedListBuf, oneline, "import " + config.testCaseClassNameToExtend + ";");
+        } else if (config.junitVersion == JUnitVersion.version4) {
+            if (!sourceCode.contains("org.hamcrest.Matchers.*;")
+                    && !uniqImportedList.contains("org.hamcrest.Matchers.*;")) {
+                appender.appendIfNotExists(importedListBuf, oneline, "import static org.hamcrest.CoreMatchers.*;");
+            }
+            appender.appendIfNotExists(importedListBuf, oneline, "import static org.junit.Assert.*;");
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.junit.Test;");
+        }
+        // Mock object framework
+        if (config.mockObjectFramework == MockObjectFramework.EasyMock) {
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.easymock.classextension.EasyMock;");
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.easymock.classextension.IMocksControl;");
+        } else if (config.mockObjectFramework == MockObjectFramework.JMock2) {
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.jmock.Mockery;");
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.jmock.Expectations;");
+            appender.appendIfNotExists(importedListBuf, oneline, "import org.jmock.lib.legacy.ClassImposteriser;");
+        } else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
+            appender.appendIfNotExists(importedListBuf, oneline, "import mockit.Mocked;");
+            appender.appendIfNotExists(importedListBuf, oneline, "import mockit.Expectations;");
+        } else if (config.mockObjectFramework == MockObjectFramework.Mockito) {
+            appender.appendIfNotExists(importedListBuf, oneline, "import static org.mockito.BDDMockito.*;");
+        }
+        if (importedListBuf.length() > 0) {
+            Matcher matcher = RegExp.PatternObject.PackageDefArea_Group.matcher(sourceCode.replaceAll(RegExp.CRLF,
+                    StringValue.Space));
+            if (matcher.find()) {
+                String packageDef = matcher.group(1);
+                String CRLF = StringValue.CarriageReturn + StringValue.LineFeed;
+                String replacement = packageDef + CRLF + CRLF
+                        + importedListBuf.toString().replaceAll("\r\n*$", StringValue.Empty);
+                dest = dest.replaceFirst(packageDef, replacement);
+            } else {
+                dest = importedListBuf.toString() + dest;
+            }
+        }
+        return dest;
+    }
+
 }
