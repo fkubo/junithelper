@@ -15,9 +15,6 @@
  */
 package org.junithelper.core.generator;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junithelper.core.config.Configuration;
 import org.junithelper.core.config.TestingTarget;
 import org.junithelper.core.config.extension.ExtInstantiation;
@@ -129,7 +126,7 @@ class GeneratorImplFunction {
     }
 
     // fk 2012.06.20 複数コンストラクタ対応.
-    static List<String> getInstantiationSourceCodeList(Configuration config, SourceCodeAppender appender,
+    static String getInstantiationSourceCodeTarget(Configuration config, SourceCodeAppender appender,
             TestMethodMeta testMethodMeta) {
 
         Assertion.on("config").mustNotBeNull(config);
@@ -163,16 +160,15 @@ class GeneratorImplFunction {
                         appender.appendExtensionPostAssignSourceCode(buf, ins.postAssignCode,
                                 new String[] { "\\{instance\\}" }, "target");
                     }
-                    List<String> list = new ArrayList<String>();
-                    list.add(buf.toString());
-                    return list;
+                    return buf.toString();
                 }
             }
         }
         // TODO better implementation
         ConstructorGenerator constructorGenerator = ConstructorGeneratorFactory.create(config,
                 appender.getLineBreakProvider());
-        return constructorGenerator.getAllInstantiationSourceCodeList(config, testMethodMeta.classMeta);
+        return constructorGenerator.getInstantiationSourceCode(config, testMethodMeta.classMeta,
+                testMethodMeta.constructorMeta);
     }
     // fk
 }
