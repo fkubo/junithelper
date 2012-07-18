@@ -44,6 +44,10 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
     StringFieldEditor editor_ClassToExtend;
 
     StringFieldEditor editor_TestMethodNameBasicDelimiter;
+    
+    // fk 2012.07.12 prefix追加.
+    StringFieldEditor editor_TestMethodNamePrefix;
+    // fk
 
     BooleanFieldEditor editor_isTestMethodNameArgsRequired;
     StringFieldEditor editor_TestMethodNameArgsPrefix;
@@ -69,7 +73,6 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
     // fk 2012.05.29 コメントフィールド追加.
     StringFieldEditor editor_Copywrite;
     StringFieldEditor editor_Author;
-
     // fk
 
     public PreferencePage() {
@@ -157,6 +160,12 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     addField(editor_ClassToExtend);
 
                     // common delimiter setting
+                    // fk 2012.07.12 prefix追加.
+                    editor_TestMethodNameArgsPrefix = new StringFieldEditor(Preference.TestMethodGen.prefix,
+                            props.get(Preference.TestMethodGen.prefix), parent);
+                    addField(editor_TestMethodNamePrefix);
+                    // fk
+
                     editor_TestMethodNameBasicDelimiter = new StringFieldEditor(Preference.TestMethodGen.delimiter,
                             props.get(Preference.TestMethodGen.delimiter), 10, parent);
                     addField(editor_TestMethodNameBasicDelimiter);

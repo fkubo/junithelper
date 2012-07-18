@@ -68,6 +68,9 @@ public class PreferenceLoader {
     public String testMethodReturnDelimiter;
     public String testMethodExceptionPrefix;
     public String testMethodExceptionDelimiter;
+    // fk 2012.07.12 prefix追加.
+    public String testMethodPrefix;
+    // fk
 
     public String classToExtend;
 
@@ -121,6 +124,10 @@ public class PreferenceLoader {
         config.testMethodName.isReturnRequired = isTestMethodNameReturnRequired;
         config.testMethodName.returnAreaDelimiter = testMethodReturnDelimiter;
         config.testMethodName.returnAreaPrefix = testMethodReturnPrefix;
+        // fk 2012.07.12 prefix追加.
+        config.testMethodName.prefix = testMethodPrefix;
+        // fk
+
         if (isArrangeActAssertCommentsRequired) {
             config.testingPatternExplicitComment = TestingPatternExplicitComment.ArrangeActAssert;
         }
@@ -195,6 +202,10 @@ public class PreferenceLoader {
         testMethodReturnDelimiter = store.getString(Preference.TestMethodGen.returnDelimiter);
         testMethodExceptionPrefix = store.getString(Preference.TestMethodGen.exceptionPrefix);
         testMethodExceptionDelimiter = store.getString(Preference.TestMethodGen.exceptionDelimiter);
+
+        // fk 2012.07.12 prefix追加.
+        testMethodPrefix = store.getString(Preference.TestMethodGen.prefix);
+        // fk
 
         // class to extend
         classToExtend = store.getString(Preference.TestClassGen.classToExtend);

@@ -35,4 +35,6 @@ public class TestMethodName {
 
     public String exceptionAreaDelimiter = "$";
 
+    public String prefix = "";
+
 }

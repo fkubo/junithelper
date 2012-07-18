@@ -65,6 +65,9 @@ public class PreferencePageInitializer extends AbstractPreferenceInitializer {
         store.setDefault(Preference.TestMethodGen.enabledException, false);
         store.setDefault(Preference.TestMethodGen.exceptionPrefix, "T");
         store.setDefault(Preference.TestMethodGen.exceptionDelimiter, "$");
+        // fk 2012.07.12 prefix追加.
+        store.setDefault(Preference.TestMethodGen.prefix, "test");
+        // fk
 
         store.setDefault(Preference.TestMethodGen.enabledTestMethodSampleImpl, true);
         store.setDefault(Preference.TestMethodGen.usingMock, Preference.TestMethodGen.usingMockJMockit);

@@ -103,6 +103,10 @@ public class Preference {
 
         public static final String exceptionDelimiter = "Preference.TestMethodGen.exceptionDelimiter";
 
+        // fk 2012.07.12 prefix追加.
+        public static final String prefix = "Preference.TestMethodGen.prefix";
+        // fk
+
         public static final String includePublic = "Preference.TestMethodGen.includePublic";
 
         public static final String includeProtected = "Preference.TestMethodGen.includeProtected";

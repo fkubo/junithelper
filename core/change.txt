@@ -1,0 +1,29 @@
+2012/05/25	abstractの時に instantiation=false となるよう変更。
+			.gitignore対応。
+2012/05/28	isAccessor の時に Expectations を出力しないよう修正。
+			isAccessor の判定で protected の場合も含めるよう修正。
+			検証用の引数にデフォルトでfinal を付与するように修正。
+2012/05/29	クラス用、メソッド用、Mock引数用のJavaDoc追加。
+			ファイル用のCopyright追加。
+			テストから例外を投げるのを廃止
+			Mock引数名を変更.
+			アクセサにTODOメッセージを入れないよう修正.
+2012/05/31	Mock引数用のJavaDoc修正。
+			アクセサのsetterのString及びprimitiveの場合だけ別の値を返すよう変更。
+			setterアクセサの検証式を変更。
+			デフォルトのassertThatのequalToを除去。
+2012/06/01	is付きフィールド対応。
+			テストメソッド内のブロックごとに改行追加。
+			primitiveWrapperの初期値対応。
+			BigInteger、BigDecimal、java.util.Date、java.sql.Date、Timestampの初期値対応。
+			型・生成テストのもTODOコメントを除去。
+			Arrange、Assertコメント変更。
+			Mockをメンバー変数ではなく、パラメータで渡すよう修正。
+2012/06/08	Mock利用のコメントを修正 returns(..)→result=..
+			abstractの時に instantiation=false となるよう変更の対応をやめ、該当テスト内のコンストラクタ部分を修正
+2012/06/13	テストメソッドコメント修正
+2012/06/14	Long、Floatの型の時にテストデータが正しくなかったのを修正
+2012/06/19	JavaDocを修正(テストメソッドをLink化、@paramに.を付与しない)
+2012/06/20	テストメソッドのJavaDocコメントが正しくなかったのを修正
+			複数のコンストラクタのテスト対応
+2012/07/12	メソッドprefix追加

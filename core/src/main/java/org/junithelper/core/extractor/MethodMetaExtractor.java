@@ -167,7 +167,7 @@ public class MethodMetaExtractor {
 				isFieldName = meta.name;
 			}
 			// fk
-			if (fieldName != null && fieldType != null) {
+			if (fieldName != null && !fieldName.isEmpty() && fieldType != null && !fieldType.isEmpty()) {
 				meta.isAccessor = isPrivateFieldExists(fieldType, fieldName, sourceCodeString);
 				// fk 2012.06.01 isの場合はis付きでもチェックする.
 				if (!meta.isAccessor && isFieldName != null) {

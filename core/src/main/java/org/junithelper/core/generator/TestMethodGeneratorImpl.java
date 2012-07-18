@@ -86,13 +86,21 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
     @Override
     public String getTestMethodNamePrefix(TestMethodMeta testMethodMeta, ExceptionMeta exception) {
         MethodMeta targetMethodMeta = testMethodMeta.methodMeta;
+
+        // fk 2012.07.12 prefix追加.
+        StringBuilder buf = new StringBuilder();
+        // fk
+
         // testing instantiation
         if (targetMethodMeta == null) {
             if (testMethodMeta.isTypeTest) {
-                return "type";
+                // fk 2012.07.12 prefix追加.
+                buf.append("type");
+                // return "type";
+                // fk
             } else if (testMethodMeta.isInstantiationTest) {
                 // fk 2012.06.20 複数コンストラクタ対応.
-                StringBuilder buf = new StringBuilder();
+                // StringBuilder buf = new StringBuilder();
                 buf.append("instantiation");
                 if (config.testMethodName.isArgsRequired) {
                     buf.append(config.testMethodName.basicDelimiter);
@@ -106,48 +114,59 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                         }
                     }
                 }
-                return buf.toString();
+                // return buf.toString();
                 // return "instantiation";
-                // fk
             }
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append(targetMethodMeta.name);
-        if (config.testMethodName.isArgsRequired) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.argsAreaPrefix);
-            if (targetMethodMeta.argTypes.size() == 0) {
-                buf.append(config.testMethodName.argsAreaDelimiter);
-            } else {
-                for (ArgTypeMeta argType : targetMethodMeta.argTypes) {
+            // fk 2012.07.12 prefix追加.
+        } else {
+            // }
+            // StringBuilder buf = new StringBuilder();
+            // fk
+            buf.append(targetMethodMeta.name);
+            if (config.testMethodName.isArgsRequired) {
+                buf.append(config.testMethodName.basicDelimiter);
+                buf.append(config.testMethodName.argsAreaPrefix);
+                if (targetMethodMeta.argTypes.size() == 0) {
                     buf.append(config.testMethodName.argsAreaDelimiter);
-                    buf.append(argType.nameInMethodName);
+                } else {
+                    for (ArgTypeMeta argType : targetMethodMeta.argTypes) {
+                        buf.append(config.testMethodName.argsAreaDelimiter);
+                        buf.append(argType.nameInMethodName);
+                    }
                 }
             }
-        }
-        if (config.testMethodName.isReturnRequired) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.returnAreaPrefix);
-            buf.append(config.testMethodName.returnAreaDelimiter);
-            if (targetMethodMeta.returnType.nameInMethodName == null) {
-                buf.append("void");
-            } else {
-                buf.append(targetMethodMeta.returnType.nameInMethodName);
+            if (config.testMethodName.isReturnRequired) {
+                buf.append(config.testMethodName.basicDelimiter);
+                buf.append(config.testMethodName.returnAreaPrefix);
+                buf.append(config.testMethodName.returnAreaDelimiter);
+                if (targetMethodMeta.returnType.nameInMethodName == null) {
+                    buf.append("void");
+                } else {
+                    buf.append(targetMethodMeta.returnType.nameInMethodName);
+                }
             }
+            if (exception != null) {
+                buf.append(config.testMethodName.basicDelimiter);
+                buf.append(config.testMethodName.exceptionAreaPrefix);
+                buf.append(config.testMethodName.exceptionAreaDelimiter);
+                buf.append(exception.nameInMethodName);
+            }
+            // extension arg patterns
+            if (testMethodMeta.extArgPattern != null) {
+                buf.append(config.testMethodName.basicDelimiter);
+                buf.append(testMethodMeta.extArgPattern.extArg.getCanonicalClassNameInMethodName());
+                buf.append("Is");
+                buf.append(testMethodMeta.extArgPattern.getNameWhichFirstCharIsUpper());
+            }
+
+            // fk 2012.07.12 prefix追加.
         }
-        if (exception != null) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(config.testMethodName.exceptionAreaPrefix);
-            buf.append(config.testMethodName.exceptionAreaDelimiter);
-            buf.append(exception.nameInMethodName);
+        if (config.testMethodName.prefix != null && !config.testMethodName.prefix.isEmpty() && buf.length() > 0) {
+            buf.replace(0, 1, buf.substring(0, 1).toUpperCase());
+            buf.insert(0, config.testMethodName.prefix);
         }
-        // extension arg patterns
-        if (testMethodMeta.extArgPattern != null) {
-            buf.append(config.testMethodName.basicDelimiter);
-            buf.append(testMethodMeta.extArgPattern.extArg.getCanonicalClassNameInMethodName());
-            buf.append("Is");
-            buf.append(testMethodMeta.extArgPattern.getNameWhichFirstCharIsUpper());
-        }
+        // fk
+
         return buf.toString();
     }
 
@@ -693,7 +712,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
         // fk
 
         // fk 2012.05.28 isAccessor の時も出力しない.
-        if (testMethodMeta.methodMeta.isAccessor) {
+        if (testMethodMeta.methodMeta != null && testMethodMeta.methodMeta.isAccessor) {
             return;
         }
         // fk
@@ -895,7 +914,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             }
             return "null";
             // fk
-        } else if (availableTypeDetector.isJavaLangPackageType(argTypeMeta.name)) {
+        } else if (availableTypeDetector.isJavaLangPackageType(argTypeMeta.name) && testMethodMeta.methodMeta != null) {
             // fk 2012.06.01
             // setterアクセサのString,Object,BigInteger,BigDecimalだけ特別扱い.
             if (testMethodMeta.methodMeta.name.startsWith("set") && testMethodMeta.methodMeta.isAccessor) {
