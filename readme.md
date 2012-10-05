@@ -1,8 +1,11 @@
 ## Eclipseアップデートサイト 
 
 http://fkubo.github.com/junithelper/eclipse-plugin-updatesite
-(ブラウザではGitHubの404が表示されます)
+(ブラウザでは正しく表示されません)
++ 2012/10/05 プラグインを更新しました。
+ + 設定ダイアログ表示エラーを回避
 
+----
 ----
 
 # JUnit Helper
