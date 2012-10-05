@@ -160,8 +160,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
                     addField(editor_ClassToExtend);
 
                     // common delimiter setting
-                    // fk 2012.07.12 prefix追加.
-                    editor_TestMethodNameArgsPrefix = new StringFieldEditor(Preference.TestMethodGen.prefix,
+                    // fk 2012/10/05 refresh時のnullチェック追加,メソッドprefix不具合修正
+                    editor_TestMethodNamePrefix = new StringFieldEditor(Preference.TestMethodGen.prefix,
                             props.get(Preference.TestMethodGen.prefix), parent);
                     addField(editor_TestMethodNamePrefix);
                     // fk

@@ -13,7 +13,6 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.junithelper.core.config.Configuration;
-import org.junithelper.core.config.JUnitVersion;
 import org.junithelper.core.config.MockObjectFramework;
 import org.junithelper.core.config.TestingPatternExplicitComment;
 import org.junithelper.core.exception.JUnitHelperCoreException;

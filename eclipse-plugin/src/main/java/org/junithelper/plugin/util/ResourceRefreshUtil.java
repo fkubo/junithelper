@@ -53,7 +53,11 @@ public final class ResourceRefreshUtil {
             IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
             IResource resource = workspaceRoot.findMember(param);
             // refresh resource
+            // fk 2012/10/05 nullチェックを追加.
+            if (resource != null) {
             resource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+            }
+            // fk
         } catch (Exception e) {
             e.printStackTrace();
             return false;

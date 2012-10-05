@@ -1,3 +1,10 @@
+## Eclipseアップデートサイト 
+
+http://fkubo.github.com/junithelper/eclipse-plugin-updatesite
+(ブラウザではGitHubの404が表示されます)
+
+----
+
 # JUnit Helper
 
 ## What's this?

@@ -5,7 +5,7 @@
 
 	<groupId>org.junithelper</groupId>
 	<artifactId>junithelper-plugin</artifactId>
-	<version>1.11.5</version>
+	<version>1.11.6</version>
 
 	<name>${project.artifactId}</name>
 	<description>JUnit Helper Eclipse Plugin</description>
@@ -174,6 +174,9 @@
                 <testMethodName_returnAreaDelimiter>$</testMethodName_returnAreaDelimiter>
                 <testMethodName_exceptionAreaPrefix>T</testMethodName_exceptionAreaPrefix>
                 <testMethodName_exceptionAreaDelimiter>$</testMethodName_exceptionAreaDelimiter>
+                <!-- fk 2012/10/05 refresh時のnullチェック追加,メソッドprefix不具合修正 -->
+                <testMethodName_prefix>test</testMethodName_prefix>
+                <!-- fk 2012/10/05 -->
                 <!-- mockObjectFramework:Mockito/JMock2/JMockit/EasyMock -->
                 <mockObjectFramework>Mockito</mockObjectFramework>
                 <!-- testingPatternExplicitComment:ArrangeActAssert/GivenWhenThen -->

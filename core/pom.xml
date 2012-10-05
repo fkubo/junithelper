@@ -157,6 +157,9 @@
                     <testMethodName_returnAreaDelimiter>$</testMethodName_returnAreaDelimiter>
                     <testMethodName_exceptionAreaPrefix>T</testMethodName_exceptionAreaPrefix>
                     <testMethodName_exceptionAreaDelimiter>$</testMethodName_exceptionAreaDelimiter>
+                    <!-- fk 2012/10/05 refresh時のnullチェック追加,メソッドprefix不具合修正 -->
+                    <testMethodName_prefix>test</testMethodName_prefix>
+                    <!-- fk 2012/10/05 -->
                     <!-- mockObjectFramework:Mockito/JMock2/JMockit/EasyMock -->
                     <mockObjectFramework></mockObjectFramework>
                     <!-- testingPatternExplicitComment:ArrangeActAssert/GivenWhenThen -->
