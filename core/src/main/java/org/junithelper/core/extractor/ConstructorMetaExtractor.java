@@ -61,15 +61,17 @@ public class ConstructorMetaExtractor {
 
         TypeNameConverter typeNameConverter = new TypeNameConverter(config);
 
-        sourceCodeString = sourceCodeString.replaceAll("\\s+?" + StringValue.Comma, StringValue.Comma).replaceAll(
-                StringValue.Comma + "\\s+?", StringValue.Comma).replaceAll("<\\s+?", "<").replaceAll("\\s+?>", ">");
+        sourceCodeString = sourceCodeString.replaceAll("\\s+?" + StringValue.Comma, StringValue.Comma)
+                .replaceAll(StringValue.Comma + "\\s+?", StringValue.Comma).replaceAll("<\\s+?", "<")
+                .replaceAll("\\s+?>", ">");
 
         Matcher matcherGrouping = RegExp.PatternObject.MethodSignatureArea.matcher(sourceCodeString);
         while (matcherGrouping.find()) {
 
             ConstructorMeta meta = new ConstructorMeta();
-            String methodSignatureArea = matcherGrouping.group(0).replaceAll(StringValue.CarriageReturn,
-                    StringValue.Empty).replaceAll(StringValue.LineFeed, StringValue.Space);
+            String methodSignatureArea = matcherGrouping.group(0)
+                    .replaceAll(StringValue.CarriageReturn, StringValue.Empty)
+                    .replaceAll(StringValue.LineFeed, StringValue.Space);
 
             // -----------------
             // access modifier
@@ -105,8 +107,8 @@ public class ConstructorMetaExtractor {
                 String argTypeFull = argArr.get(i);
                 Matcher toGenericsMatcher = Pattern.compile(RegExp.Generics_Group).matcher(argTypeFull);
                 while (toGenericsMatcher.find()) {
-                    String[] generics = toGenericsMatcher.group().replaceAll("<", StringValue.Empty).replaceAll(">",
-                            StringValue.Empty).split(StringValue.Comma);
+                    String[] generics = toGenericsMatcher.group().replaceAll("<", StringValue.Empty)
+                            .replaceAll(">", StringValue.Empty).split(StringValue.Comma);
                     // convert to java.lang.Object if self class is included
                     for (String generic : generics) {
                         generic = typeNameConverter.toCompilableType(generic, classMeta.importedList,
@@ -114,8 +116,8 @@ public class ConstructorMetaExtractor {
                         argTypeMeta.generics.add(generic);
                     }
                 }
-                String argTypeName = argTypeFull.replaceAll(RegExp.Generics, StringValue.Empty).replaceAll("final ",
-                        StringValue.Empty).split("\\s+")[0].trim();
+                String argTypeName = argTypeFull.replaceAll(RegExp.Generics, StringValue.Empty)
+                        .replaceAll("final ", StringValue.Empty).split("\\s+")[0].trim();
                 if (argTypeName != null && !argTypeName.equals("")) {
                     argTypeMeta.name = typeNameConverter.toCompilableType(argTypeName, argTypeMeta.generics,
                             classMeta.importedList, classMeta.packageName);
@@ -167,10 +169,12 @@ public class ConstructorMetaExtractor {
     String trimAccessModifierFromMethodSignatureArea(String methodSignatureArea) {
         String regExpForAccessModifier_public = AccessModifierDetector.RegExp.Prefix + "public" + "\\s+";
         String regExpForAccessModifier_protected = AccessModifierDetector.RegExp.Prefix + "protected" + "\\s+";
-        String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.Tab,
-                StringValue.Space).replaceAll(regExpForAccessModifier_public, StringValue.Space).replaceAll(
-                regExpForAccessModifier_protected, StringValue.Space).replaceAll("\\sfinal\\s", StringValue.Space);
+        // fk 2012.10.09 スペースが無限ループするので、置換条件追加.
+        //String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.Tab,
+        String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.TabsAndSpaces,
+        // fk 2012.10.09
+        StringValue.Space).replaceAll(regExpForAccessModifier_public, StringValue.Space).replaceAll(
+        regExpForAccessModifier_protected, StringValue.Space).replaceAll("\\sfinal\\s", StringValue.Space);
         return methodSignatureAreaWithoutAccessModifier;
     }
-
 }

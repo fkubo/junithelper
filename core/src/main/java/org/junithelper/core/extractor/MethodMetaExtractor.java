@@ -243,7 +243,10 @@ public class MethodMetaExtractor {
 
 		String regExpForAccessModifier_public = AccessModifierDetector.RegExp.Prefix + "public" + "\\s+";
 		String regExpForAccessModifier_protected = AccessModifierDetector.RegExp.Prefix + "protected" + "\\s+";
-		String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.Tab,
+	    // fk 2012.10.09 スペースが無限ループするので、置換条件追加.
+		//String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.Tab,
+		String methodSignatureAreaWithoutAccessModifier = methodSignatureArea.replaceAll(StringValue.TabsAndSpaces,
+		// fk 2012.10.09
 				StringValue.Space).replaceAll(regExpForAccessModifier_public, StringValue.Space).replaceAll(
 						regExpForAccessModifier_protected, StringValue.Space).replaceAll("\\sfinal\\s", StringValue.Space);
 		return methodSignatureAreaWithoutAccessModifier;

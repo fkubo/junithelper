@@ -126,6 +126,10 @@ public class CreateNewTestCaseAction extends AbstractAction implements IActionDe
                             config.directoryPathOfProductSourceCode, config.directoryPathOfTestSourceCode).replace(
                             StringValue.FileExtension.JavaFile,
                             StringValue.JUnit.TestClassNameSuffix + StringValue.FileExtension.JavaFile);
+            if (testCaseCreateFilePath.contains("<default>")) {
+                // デフォルトパッケージで生成すると正しく動作しないことがあるので対応.
+                testCaseCreateFilePath = testCaseCreateFilePath.replace("<default>", "");
+            }
             // testCaseCreateFilePath = projectRootAbsolutePath +
             // getResourcePathForTargetClassFile(structuredSelection).replace(
             // config.directoryPathOfProductSourceCode,

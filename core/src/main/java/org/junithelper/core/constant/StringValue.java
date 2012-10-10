@@ -22,6 +22,10 @@ public final class StringValue {
     public static final String Space = " ";
 
     public static final String Tab = "\t";
+    
+    // fk 2012.10.09 スペースが無限ループするので、置換条件追加.
+    public static final String TabsAndSpaces = "(\t| )+";
+    // fk 2012.10.09
 
     public static final String Comma = ",";
 
