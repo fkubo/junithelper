@@ -106,7 +106,17 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
         String checkTargetSourceCode = TrimFilterUtil.doAllFilters(currentTestCaseSourceCode);
 
         // is testing type safe required
-        if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*type\\("
+
+        // fk 2012.10.19 test, instantiationの重複チェック時、メソッドprefixを反映していない.
+        StringBuilder buf = new StringBuilder("type");
+        if (config.testMethodName.prefix != null && !config.testMethodName.prefix.isEmpty() && buf.length() > 0) {
+            buf.replace(0, 1, buf.substring(0, 1).toUpperCase());
+            buf.insert(0, config.testMethodName.prefix);
+        }
+        //if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*type\\("
+        if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*" + buf + "\\("
+        // fk
+        
                 + RegExp.Anything_ZeroOrMore_Min)) {
             TestMethodMeta meta = new TestMethodMeta();
             meta.classMeta = targetClassMeta;
@@ -123,9 +133,20 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
                 }
             }
             // instantiation test
+
+            // fk 2012.10.19 test, instantiationの重複チェック時、メソッドprefixを反映していない.
+            buf = new StringBuilder("instantiation");
+            if (config.testMethodName.prefix != null && !config.testMethodName.prefix.isEmpty() && buf.length() > 0) {
+                buf.replace(0, 1, buf.substring(0, 1).toUpperCase());
+                buf.insert(0, config.testMethodName.prefix);
+            }
+
             if (notPrivateConstructor != null) {
                 if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min
-                        + "public\\s+void\\s+[^\\s]*instantiation\\(" + RegExp.Anything_ZeroOrMore_Min)) {
+                        //+ "public\\s+void\\s+[^\\s]*instantiation\\(" + RegExp.Anything_ZeroOrMore_Min)) {
+                        + "public\\s+void\\s+[^\\s]*" + buf + "\\(" + RegExp.Anything_ZeroOrMore_Min)) {
+            // fk
+
                     // fk 2012.06.20 複数コンストラクタ対応.
                     for (ConstructorMeta constructorMeta : targetClassMeta.constructors) {
                         TestMethodMeta meta = new TestMethodMeta();
