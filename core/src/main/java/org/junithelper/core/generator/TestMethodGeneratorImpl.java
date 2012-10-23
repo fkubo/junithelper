@@ -261,6 +261,9 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 
         // モックコメント追加.
         List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
+        // fk 2012.10.23 hasMockが設定されない不具合に対応.
+        hasMock = !mockedFieldsForJMockit.isEmpty();
+        // fk
         for (int i = 0; i < mockedFieldsForJMockit.size(); i++) {
             String[] mocked = mockedFieldsForJMockit.get(i);
             appender.appendTabs(buf, 1);
@@ -478,21 +481,19 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     }
                 } else {
                     appendTestingPatternExplicitComment(buf, "Assert：結果が正しいこと", 2);
-                    // fk 2012.10.23 モックが無い場合は出力しないよう変更.
-                    if (hasMock) {
-                        buf.append("new Verifications(){{");
-                        appender.appendLineBreak(buf);
-                        appender.appendTabs(buf, 3);
-                        buf.append("// ");
-                        buf.append(messageValue.getExempliGratia());
-                        buf.append(" : ");
-
-                        buf.append("String str;mocked.get(str=withCapture());assertThat(str, containsString(\"..\"));");
-
-                        appender.appendLineBreak(buf);
-                        appender.appendTabs(buf, 3);
-                        buf.append("}};");
-                    }
+                    // fk 2012.10.23 モックが無い時も出力するよう変更.
+                    appender.appendTabs(buf, 2);
+                    buf.append("// new Verifications(){{");
+                    appender.appendLineBreak(buf);
+                    appender.appendTabs(buf, 3);
+                    buf.append("// ");
+                    buf.append(messageValue.getExempliGratia());
+                    buf.append(" : ");
+                    buf.append("String str;mocked.get(str=withCapture());assertThat(str, containsString(\"..\"));");
+                    appender.appendLineBreak(buf);
+                    appender.appendTabs(buf, 2);
+                    buf.append("// }};");
+                    appender.appendLineBreak(buf);
                     // fk
                 }
                 // fk
@@ -757,27 +758,27 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             buf.append("}});");
             appender.appendLineBreak(buf);
         } else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
+            // fk 2012.10.23 モックが無い時も出力するよう変更.
             appender.appendTabs(buf, depth);
-            // fk 2012.10.19 モックが無い場合のコメント化.
-            if (!hasMock) {
-                // fk
-                buf.append("new Expectations(){{");
-                appender.appendLineBreak(buf);
-                appender.appendTabs(buf, depth + 1);
-                buf.append("// ");
-                buf.append(messageValue.getExempliGratia());
-                buf.append(" : ");
-
-                // fk 2012.06.08 コメント修正.
-                buf.append("mocked.get(anyString); result = 200;");
-                // buf.append("mocked.get(anyString); returns(200);");
-                // fk
-
-                appender.appendLineBreak(buf);
-                appender.appendTabs(buf, depth);
-                buf.append("}};");
-            }
+            buf.append("// new Expectations(){{");
             appender.appendLineBreak(buf);
+            appender.appendTabs(buf, depth + 1);
+            buf.append("// ");
+            buf.append(messageValue.getExempliGratia());
+            buf.append(" : ");
+            // fk
+
+            // fk 2012.06.08 コメント修正.
+            buf.append("mocked.get(anyString); result = 200;");
+            // buf.append("mocked.get(anyString); returns(200);");
+            // fk
+
+            // fk 2012.10.23 モックが無い時も出力するよう変更.
+            appender.appendLineBreak(buf);
+            appender.appendTabs(buf, depth);
+            buf.append("// }};");
+            appender.appendLineBreak(buf);
+            // fk
         } else if (config.mockObjectFramework == MockObjectFramework.Mockito) {
             appender.appendTabs(buf, depth);
             buf.append("// ");
