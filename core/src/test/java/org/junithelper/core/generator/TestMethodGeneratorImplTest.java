@@ -259,7 +259,7 @@ public class TestMethodGeneratorImplTest {
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 0;
 		// when
-		generator.appendMockChecking(buf, depth, testMethodMeta);
+		generator.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals("", buf.toString());
 	}
@@ -277,7 +277,7 @@ public class TestMethodGeneratorImplTest {
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 1;
 		// when
-		generator.appendMockChecking(buf, depth, testMethodMeta);
+		generator.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals("", buf.toString());
 	}
@@ -295,7 +295,7 @@ public class TestMethodGeneratorImplTest {
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 2;
 		// when
-		generator.appendMockChecking(buf, depth, testMethodMeta);
+		generator.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals("", buf.toString());
 	}
@@ -317,7 +317,7 @@ public class TestMethodGeneratorImplTest {
 		int depth = 2;
 		// e.g. : given(mocked.called()).willReturn(1);
 		// when
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals("\t\t// e.g. : EasyMock.expect(mocked.called()).andReturn(1);\r\n		mocks.replay();\r\n", buf
 				.toString());
@@ -340,7 +340,7 @@ public class TestMethodGeneratorImplTest {
 		int depth = 2;
 		// e.g. : given(mocked.called()).willReturn(1);
 		// when
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals(
 				"\t\tcontext.checking(new Expectations(){{\r\n			// e.g. : allowing(mocked).called(); will(returnValue(1));\r\n		}});\r\n",
@@ -364,7 +364,7 @@ public class TestMethodGeneratorImplTest {
 		int depth = 2;
 		// e.g. : given(mocked.called()).willReturn(1);
 		// when
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
         assertEquals(
                 "\t\tnew Expectations(){{\r\n\t\t\t// e.g. : mocked.get(anyString); result = 200;\r\n\t\t}};\r\n",
@@ -391,7 +391,7 @@ public class TestMethodGeneratorImplTest {
 		int depth = 2;
 		// e.g. : given(mocked.called()).willReturn(1);
 		// when
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 		// then
 		assertEquals("\t\t// e.g. : given(mocked.called()).willReturn(1);\r\n", buf.toString());
 	}
@@ -670,7 +670,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = target
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = -1;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -685,7 +685,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = target
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 0;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -700,7 +700,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = target
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 1;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -715,7 +715,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = target
 				.getTestMethodMeta(targetMethodMeta);
 		int depth = 2;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -903,7 +903,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = new TestMethodMeta();
 		StringBuilder buf = new StringBuilder();
 		int depth = Integer.MIN_VALUE;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -912,7 +912,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = new TestMethodMeta();
 		StringBuilder buf = new StringBuilder();
 		int depth = Integer.MAX_VALUE;
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test
@@ -973,7 +973,7 @@ public class TestMethodGeneratorImplTest {
 		TestMethodMeta testMethodMeta = new TestMethodMeta();
 		StringBuilder buf = new StringBuilder();
 		int depth = new Random().nextInt(10);
-		target.appendMockChecking(buf, depth, testMethodMeta);
+		target.appendMockChecking(buf, depth, testMethodMeta, true);
 	}
 
 	@Test

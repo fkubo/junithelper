@@ -15,6 +15,7 @@
  */
 package org.junithelper.plugin.page;
 
+import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
@@ -137,7 +138,7 @@ public class PreferenceLoader {
         // fk 2012.05.29 コメント定義追加.
         TemplateStore templates = JavaPlugin.getDefault().getCodeTemplateStore();
         if (templates.findTemplate("filecomment") != null) {
-            config.copyright = templates.findTemplate("filecomment").getPattern();
+            config.copyright = templates.findTemplate(CodeTemplateContextType.FILE_COMMENT).getPattern();
         }
         config.author = author;
         // fk

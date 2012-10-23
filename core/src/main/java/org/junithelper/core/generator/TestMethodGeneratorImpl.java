@@ -15,9 +15,7 @@
  */
 package org.junithelper.core.generator;
 
-import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCode;
-import static org.junithelper.core.generator.GeneratorImplFunction.getInstantiationSourceCodeTarget;
-import static org.junithelper.core.generator.GeneratorImplFunction.isCanonicalClassNameUsed;
+import static org.junithelper.core.generator.GeneratorImplFunction.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -177,6 +175,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
 
         // fk 2012.06.01 フィールド定義Mockかパラメータ定義Mockかを判定するフラグ.
         boolean isFieldMock = false;
+        boolean hasMock = false;
         // fk
 
         // JMockit
@@ -187,6 +186,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             List<String[]> mockedFieldsForJMockit = getMockedFieldsForJMockit(testMethodMeta);
             // List<String> mockedFieldsForJMockit =
             // getMockedFieldsForJMockit(testMethodMeta);
+            hasMock = !mockedFieldsForJMockit.isEmpty();
             for (String[] mocked : mockedFieldsForJMockit) {
                 // for (String mocked : mockedFieldsForJMockit) {
                 assert (mocked.length == 4);
@@ -437,7 +437,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 // mock/stub checking
 
                 // fk 2012.05.28 アクセサも除外するために引数追加.
-                appendMockChecking(buf, 2, testMethodMeta);
+                appendMockChecking(buf, 2, testMethodMeta, hasMock);
                 // appendMockChecking(buf, 2);
                 // fk
 
@@ -478,6 +478,22 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     }
                 } else {
                     appendTestingPatternExplicitComment(buf, "Assert：結果が正しいこと", 2);
+                    // fk 2012.10.23 モックが無い場合は出力しないよう変更.
+                    if (hasMock) {
+                        buf.append("new Verifications(){{");
+                        appender.appendLineBreak(buf);
+                        appender.appendTabs(buf, 3);
+                        buf.append("// ");
+                        buf.append(messageValue.getExempliGratia());
+                        buf.append(" : ");
+
+                        buf.append("String str;mocked.get(str=withCapture());assertThat(str, containsString(\"..\"));");
+
+                        appender.appendLineBreak(buf);
+                        appender.appendTabs(buf, 3);
+                        buf.append("}};");
+                    }
+                    // fk
                 }
                 // fk
                 // Mockito BDD
@@ -557,7 +573,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                 // mock/stub checking
 
                 // fk 2012.05.29 アクセサも除外するために引数追加.
-                appendMockChecking(buf, 2, testMethodMeta);
+                appendMockChecking(buf, 2, testMethodMeta, hasMock);
                 // appendMockChecking(buf, 2);
                 // fk
 
@@ -707,7 +723,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
     }
 
     // fk 2012.05.28 アクセサも除外するために引数追加.
-    void appendMockChecking(StringBuilder buf, int depth, TestMethodMeta testMethodMeta) {
+    void appendMockChecking(StringBuilder buf, int depth, TestMethodMeta testMethodMeta, boolean hasMock) {
         // void appendMockChecking(StringBuilder buf, int depth) {
         // fk
 
@@ -742,21 +758,25 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
             appender.appendLineBreak(buf);
         } else if (config.mockObjectFramework == MockObjectFramework.JMockit) {
             appender.appendTabs(buf, depth);
-            buf.append("new Expectations(){{");
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth + 1);
-            buf.append("// ");
-            buf.append(messageValue.getExempliGratia());
-            buf.append(" : ");
+            // fk 2012.10.19 モックが無い場合のコメント化.
+            if (!hasMock) {
+                // fk
+                buf.append("new Expectations(){{");
+                appender.appendLineBreak(buf);
+                appender.appendTabs(buf, depth + 1);
+                buf.append("// ");
+                buf.append(messageValue.getExempliGratia());
+                buf.append(" : ");
 
-            // fk 2012.06.08 コメント修正.
-            buf.append("mocked.get(anyString); result = 200;");
-            // buf.append("mocked.get(anyString); returns(200);");
-            // fk
+                // fk 2012.06.08 コメント修正.
+                buf.append("mocked.get(anyString); result = 200;");
+                // buf.append("mocked.get(anyString); returns(200);");
+                // fk
 
-            appender.appendLineBreak(buf);
-            appender.appendTabs(buf, depth);
-            buf.append("}};");
+                appender.appendLineBreak(buf);
+                appender.appendTabs(buf, depth);
+                buf.append("}};");
+            }
             appender.appendLineBreak(buf);
         } else if (config.mockObjectFramework == MockObjectFramework.Mockito) {
             appender.appendTabs(buf, depth);
