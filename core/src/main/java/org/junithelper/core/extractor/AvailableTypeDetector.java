@@ -108,20 +108,30 @@ public class AvailableTypeDetector {
             Class<?> clazz = Class.forName("java.lang." + typeName);
             return (Modifier.isFinal(clazz.getModifiers())) ? false : true;
         } catch (Exception ignore) {
-            // imported class name
-            for (String importedPackage : classMeta.importedList) {
-                importedPackage = importedPackage.replaceAll("//", StringValue.Empty);
-                if (importedPackage.matches(".+?\\." + typeName + "$")) {
-                    return true;
+
+            // fk 2012.10.26 java.util で final なクラスも追加.
+            try {
+                // java.util class name
+                Class<?> clazz = Class.forName("java.util." + typeName);
+                return (Modifier.isFinal(clazz.getModifiers())) ? false : true;
+            } catch (Exception ignore2) {
+                // fk
+
+                // imported class name
+                for (String importedPackage : classMeta.importedList) {
+                    importedPackage = importedPackage.replaceAll("//", StringValue.Empty);
+                    if (importedPackage.matches(".+?\\." + typeName + "$")) {
+                        return true;
+                    }
                 }
-            }
-            // full package class name
-            if (typeName.matches(".+?\\..+")) {
-                try {
-                    Class<?> clazz = Class.forName(typeName);
-                    return !(Modifier.isFinal(clazz.getModifiers()));
-                } catch (Exception e) {
-                    return false;
+                // full package class name
+                if (typeName.matches(".+?\\..+")) {
+                    try {
+                        Class<?> clazz = Class.forName(typeName);
+                        return !(Modifier.isFinal(clazz.getModifiers()));
+                    } catch (Exception e) {
+                        return false;
+                    }
                 }
             }
         }

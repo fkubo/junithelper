@@ -20,7 +20,9 @@ import static org.junithelper.core.generator.GeneratorImplFunction.isPackageLoca
 import static org.junithelper.core.generator.GeneratorImplFunction.isProtectedMethodAndTestingRequired;
 import static org.junithelper.core.generator.GeneratorImplFunction.isPublicMethodAndTestingRequired;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -113,10 +115,11 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
             buf.replace(0, 1, buf.substring(0, 1).toUpperCase());
             buf.insert(0, config.testMethodName.prefix);
         }
-        //if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*type\\("
+        // if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min +
+        // "public\\s+void\\s+[^\\s]*type\\("
         if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min + "public\\s+void\\s+[^\\s]*" + buf + "\\("
         // fk
-        
+
                 + RegExp.Anything_ZeroOrMore_Min)) {
             TestMethodMeta meta = new TestMethodMeta();
             meta.classMeta = targetClassMeta;
@@ -143,9 +146,10 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 
             if (notPrivateConstructor != null) {
                 if (!checkTargetSourceCode.matches(RegExp.Anything_ZeroOrMore_Min
-                        //+ "public\\s+void\\s+[^\\s]*instantiation\\(" + RegExp.Anything_ZeroOrMore_Min)) {
+                // + "public\\s+void\\s+[^\\s]*instantiation\\(" +
+                // RegExp.Anything_ZeroOrMore_Min)) {
                         + "public\\s+void\\s+[^\\s]*" + buf + "\\(" + RegExp.Anything_ZeroOrMore_Min)) {
-            // fk
+                    // fk
 
                     // fk 2012.06.20 複数コンストラクタ対応.
                     for (ConstructorMeta constructorMeta : targetClassMeta.constructors) {
@@ -156,10 +160,10 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
                         addTestMethodMetaToListIfNotExists(dest, meta);
                     }
 
-                    //					TestMethodMeta meta = new TestMethodMeta();
-                    //					meta.classMeta = targetClassMeta;
-                    //					meta.isInstantiationTest = true;
-                    //					addTestMethodMetaToListIfNotExists(dest, meta);
+                    // TestMethodMeta meta = new TestMethodMeta();
+                    // meta.classMeta = targetClassMeta;
+                    // meta.isInstantiationTest = true;
+                    // addTestMethodMetaToListIfNotExists(dest, meta);
                     // fk
                 }
             }
@@ -304,7 +308,22 @@ class TestCaseGeneratorImpl implements TestCaseGenerator {
 
         // fk 2012.05.29 Copyright追加.
         if (config.copyright != null && config.copyright.trim().length() > 0) {
-            buf.append(config.copyright);
+            // fk 2012.10.26 Copyright内の日付、ファイル名置換を追加.
+            String copyright = config.copyright;
+            if (copyright.contains("${year}")) {
+                copyright = copyright.replace("${year}", new SimpleDateFormat("yyyy").format(new Date()));
+            }
+            if (copyright.contains("${date}")) {
+                copyright = copyright.replace("${date}", new SimpleDateFormat("yyyy/MM/dd").format(new Date()));
+            }
+            if (copyright.contains("${file_name}")) {
+                copyright = copyright.replace("${file_name}",targetClassMeta.name + "Test.java");
+            }
+            if (copyright.contains("${package_name}")) {
+                copyright = copyright.replace("${file_name}",targetClassMeta.packageName);
+            }
+            buf.append(copyright);
+            // fk
             appender.appendLineBreak(buf);
         }
         // fk

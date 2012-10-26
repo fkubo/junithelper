@@ -489,7 +489,7 @@ class TestMethodGeneratorImpl implements TestMethodGenerator {
                     buf.append("// ");
                     buf.append(messageValue.getExempliGratia());
                     buf.append(" : ");
-                    buf.append("String str;mocked.get(str=withCapture());assertThat(str, containsString(\"..\"));");
+                    buf.append("List<String> list = new ArrayList<String>();mock.exec(withCapture(list));assertThat(list, is(not(empty()));assertThat(list.get(0), containsString(\"str\"));");
                     appender.appendLineBreak(buf);
                     appender.appendTabs(buf, 2);
                     buf.append("// }};");
